@@ -47,7 +47,7 @@ Run `bash publish.sh` again whenever you have updated files. To use a different 
 2. Select **uploading an existing file**, drag in all the files from this folder, then select **Commit changes**.
    `.nojekyll` is hidden on a Mac by default. Press ⌘⇧. (period) in Finder to show it. The site works without it.
 3. Go to **Settings**, then **Pages**. Set Source to **Deploy from a branch**, Branch to **main**, folder **/ (root)**, and select **Save**.
-4. After a minute or two, open `https://YOUR-USERNAME.github.io/notepannuda/notepannuda.html`.
+4. After a minute or two, open `https://araghunathan99.github.io/notepannuda/notepannuda.html`.
 
 The repository is public, but it contains only the empty app. Your notes live on your devices, never on GitHub.
 
