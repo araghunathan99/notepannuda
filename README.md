@@ -1,18 +1,22 @@
+<p align="center"><img src="logo-512.png" alt="NotePannuda" width="160"></p>
+
 # NotePannuda
 
 Jot first, organize later. NotePannuda is a fast, local-first notes and tasks app that runs in your browser and installs like an app on your Mac and your Android phone. Paired devices sync directly with each other: no accounts, no cloud storage, no server of your own.
 
-**Your app's address after publishing:** `https://araghunathan99.github.io/notepannuda/notepannuda.html`
+**Your app's address after publishing:** `https://YOUR-USERNAME.github.io/notepannuda/notepannuda.html`
 
 ## Features
 
-- **Instant capture:** every jot saves as you type. Quick syntax: `#tag`, `!h` `!m` `!l` for priority, `due:fri`, `due:+3d`, `w:3` for weight, and `[]` to start a checklist.
+- **Instant capture:** every jot saves as you type. Finish with **Save note** or **Save as task** (or Enter / ⌘+Enter). On a computer, drag the divider under the jot box to make it taller or shorter. Quick syntax: `#tag`, `!h` `!m` `!l` for priority, `due:fri`, `due:+3d`, `w:3` for weight, and `[]` to start a checklist.
 - **Tasks:** priority, weight, due dates, reminders, and checklists. Checking the last item completes the task.
 - **Organized automatically:** tasks are grouped by Overdue, Today, Next 7 days, Later, and No due date. Completed tasks move to their own section.
-- **Search:** multi-word, instant even with 10,000 jots, with filters like `is:task`, `p:high`, `due:week`, `#tag`, and `-word`, plus `sort:` options.
+- **Search:** multi-word, instant even with 10,000 jots, with filters like `is:task`, `p:high,med`, `w:3-5`, `due:week`, `#tag`, and `-word`, plus `sort:` options. Priority and weight buttons let you pick several at once.
 - **Auto-tags:** keyword rules tag jots for you.
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
+- **Select to complete or delete in bulk:** choose **Select** above the list, ⌘/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**) or **Delete**, and Undo if you change your mind.
+- **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
 - **Phone-friendly:** swipe to complete or delete, Android back-gesture support, and a share target (share text or files into NotePannuda). Works offline.
 
 ## Files
@@ -22,7 +26,10 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 | `notepannuda.html` | The whole app |
 | `sw.js` | Service worker: offline use and receiving shared files |
 | `manifest.webmanifest` | Makes it installable (name, icons, shortcuts, share target) |
-| `icon*.png`, `icon.svg`, `shortcut-*.png` | App and shortcut icons |
+| `favicon.ico`, `favicon.svg`, `favicon-16.png`, `favicon-32.png` | Browser tab icons |
+| `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | Home-screen and app icons |
+| `logo-96.png`, `logo-512.png` | Logo (sidebar badge, README) |
+| `shortcut-*.png` | Long-press shortcut icons |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 | `publish.sh` | Publishes or updates the site from your Mac |
 
@@ -47,7 +54,7 @@ Run `bash publish.sh` again whenever you have updated files. To use a different 
 2. Select **uploading an existing file**, drag in all the files from this folder, then select **Commit changes**.
    `.nojekyll` is hidden on a Mac by default. Press ⌘⇧. (period) in Finder to show it. The site works without it.
 3. Go to **Settings**, then **Pages**. Set Source to **Deploy from a branch**, Branch to **main**, folder **/ (root)**, and select **Save**.
-4. After a minute or two, open `https://araghunathan99.github.io/notepannuda/notepannuda.html`.
+4. After a minute or two, open `https://YOUR-USERNAME.github.io/notepannuda/notepannuda.html`.
 
 The repository is public, but it contains only the empty app. Your notes live on your devices, never on GitHub.
 

@@ -10,8 +10,11 @@
 <meta name="apple-mobile-web-app-title" content="NotePannuda">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>NotePannuda</title>
 <style>
 :root{ accent-color:#1F5F8B;
@@ -32,8 +35,8 @@ body{background:var(--paper);color:var(--ink);font:14px/1.5 var(--sans);-webkit-
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{display:grid;grid-template-columns:232px 1fr;height:100vh;height:100dvh;padding-top:env(safe-area-inset-top)}
-.app.editing{grid-template-columns:232px 1fr 400px}
+.app{display:grid;grid-template-columns:var(--side-w,232px) 1fr;height:100vh;height:100dvh;padding-top:env(safe-area-inset-top);position:relative}
+.app.editing{grid-template-columns:var(--side-w,232px) 1fr var(--ed-w,400px)}
 
 /* sidebar */
 .side{border-right:1px solid var(--rule);padding:18px 12px;display:flex;flex-direction:column;gap:18px;overflow:auto}
@@ -58,8 +61,25 @@ button{cursor:pointer}
 
 /* main */
 .main{display:flex;flex-direction:column;min-width:0;overflow:hidden}
-.capture{padding:22px 28px 12px;border-bottom:1px solid var(--rule);background:var(--surface)}
-.capture textarea{width:100%;border:0;resize:none;background:transparent;font:19px/1.45 var(--serif);outline:none;min-height:30px;max-height:180px;padding:0}
+.capture{padding:18px 28px 10px;background:var(--surface)}
+.cap-box{border:1.5px solid var(--rule-strong);border-radius:12px;background:var(--paper);transition:border-color .15s,box-shadow .15s,background .15s;cursor:text}
+.cap-box:hover{border-color:var(--faint)}
+.cap-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--surface)}
+.cap-foot{display:flex;align-items:center;gap:10px;padding:4px 10px 10px 16px;flex-wrap:wrap;cursor:default}
+.cap-foot .parse{flex:1;margin:0;min-width:200px}
+.cap-actions{display:flex;gap:8px;margin-left:auto}
+.capbtn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;border:1px solid var(--rule-strong);background:var(--surface);color:var(--ink);white-space:nowrap}
+.capbtn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.capbtn.task{background:var(--accent);border-color:var(--accent);color:#fff}
+.capbtn.task:hover:not(:disabled){filter:brightness(1.08);color:#fff}
+.capbtn:disabled{opacity:.45;cursor:default}
+.capbtn .lbl-short{display:none}
+.grip-h{height:12px;flex:none;cursor:row-resize;position:relative;background:var(--surface);border-bottom:1px solid var(--rule);touch-action:none;outline:none}
+.grip-h::after{content:'';position:absolute;left:50%;top:4px;width:44px;height:4px;margin-left:-22px;border-radius:2px;background:var(--rule-strong);transition:background .15s}
+.grip-h:hover::after,.grip-h:focus-visible::after,body.resizing-v .grip-h::after{background:var(--accent)}
+body.resizing-v{cursor:row-resize;user-select:none}
+body.resizing-v *{cursor:row-resize!important}
+.capture textarea{display:block;width:100%;border:0;resize:none;background:transparent;font:19px/1.5 var(--serif);outline:none;min-height:var(--cap-h,96px);max-height:none;padding:14px 16px 6px}
 .capture textarea::placeholder{color:var(--faint)}
 .parse{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:24px;margin-top:6px;font-size:12px;color:var(--faint)}
 .pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 8px;font-size:12px;border:1px solid var(--rule);color:var(--graphite);background:var(--surface);white-space:nowrap}
@@ -170,8 +190,15 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 .bar{display:inline-block;width:36px;height:4px;background:var(--rule);border-radius:2px;overflow:hidden;margin-right:2px}
 .bar i{display:block;height:100%;background:var(--ok)}
 .sortwrap{position:relative}
-.sortbtn{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
-.sortbtn[aria-expanded=true]{border-color:var(--accent);color:var(--accent)}
+.sortbtn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#D9B84E;color:#2B2100;border:1px solid #B8962F;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600}
+.sortbtn:hover{background:#CFAC3E}
+.sortbtn[aria-expanded=true]{background:#C49F2E;border-color:#8F7219;color:#1F1800}
+.sortbtn svg{color:currentColor}
+@media (prefers-color-scheme: dark){
+  .sortbtn{background:#C9AA4A;color:#1C1600;border-color:#E0C46B}
+  .sortbtn:hover{background:#D6B856}
+  .sortbtn[aria-expanded=true]{background:#E0C46B;color:#1C1600}
+}
 .sortpanel[hidden]{display:none}
 .sortpanel{position:absolute;right:0;top:calc(100% + 6px);z-index:12;width:min(400px,92vw);background:var(--surface);border:1px solid var(--rule-strong);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(15,20,28,.14)}
 .sp-row{display:grid;grid-template-columns:62px 1fr auto;gap:8px;align-items:center}
@@ -230,12 +257,38 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 .warn-text{color:var(--med);font-size:13px;margin:6px 0 0}
 .check-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink);margin:4px 0 10px;cursor:pointer}
 .check-row input{margin-top:2px;width:18px;height:18px;flex:none}
+.grip{position:absolute;top:0;bottom:0;width:10px;margin-left:-5px;cursor:col-resize;z-index:6;touch-action:none;outline:none}
+.grip::after{content:'';position:absolute;top:0;bottom:0;left:4px;width:2px;background:transparent;transition:background .15s}
+.grip:hover::after,.grip:focus-visible::after,body.resizing .grip::after{background:var(--accent)}
+#sideGrip{left:var(--side-w,232px)}
+#edGrip{left:calc(100% - var(--ed-w,400px));display:none}
+.app.editing #edGrip{display:block}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing *{cursor:col-resize!important}
+.selbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 28px;background:var(--accent-soft);border-bottom:1px solid var(--rule);font-size:13px}
+.selbar[hidden]{display:none}
+.selbar label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+.selbar input{width:18px;height:18px;margin:0}
+.selbar .grow{flex:1;color:var(--graphite)}
+.btn-danger{border:0;background:var(--high);color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600}
+.btn-danger:disabled{opacity:.45;cursor:default}
+.pick{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--rule-strong);background:var(--surface);padding:0;margin:3px 0 0 4px;display:grid;place-items:center;color:#fff}
+.pick.on{background:var(--accent);border-color:var(--accent)}
+.item.picked{background:var(--accent-soft);border-color:var(--accent)}
+.list.selecting .item .acts .quick{display:none}
+.seg-lab{display:flex;align-items:center;padding:0 8px;font-size:12px;color:var(--faint);border-right:1px solid var(--rule)}
+#weightSeg button{min-width:30px}
+.btn-ok{border:0;background:var(--ok);color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600}
+.btn-ok:disabled{opacity:.45;cursor:default}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-badge{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 0 0 1px var(--rule);overflow:hidden}
+.brand-badge img{width:38px;height:38px;object-fit:contain;display:block}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .menu-btn{display:none}
 .filters{display:contents}
 .cap-row{display:flex;gap:8px;align-items:flex-end}
 .cap-row textarea{flex:1}
-.capbtn,.bnav,.syncdot,.dscrim,.sheetscrim{display:none}
+.bnav,.syncdot,.dscrim,.sheetscrim{display:none}
 .search-ic{flex:none;color:var(--faint)}
 .grp{position:sticky;top:0;z-index:2;background:var(--paper)}
 .list{overscroll-behavior-y:contain}
@@ -283,6 +336,13 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
   .item:hover{background:transparent}
   .item:active{background:var(--surface)}
   .item .acts .quick{display:none}
+  .grip{display:none!important}
+  .item{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .selbar{order:2;padding:8px 14px}
+  .selbar .btn-danger,.selbar .btn-ok,.selbar .ghost{min-height:40px}
+  .filters .seg-lab{padding:0 10px;font-size:13px}
+  .pick{width:24px;height:24px;position:relative;margin:1px 0 0 4px}
+  .pick::after{content:'';position:absolute;inset:-12px}
   .item .t{font-size:17px}
   .check{width:24px;height:24px;margin:1px 0 0 4px;position:relative}
   .check::after{content:'';position:absolute;inset:-12px}
@@ -294,13 +354,17 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 
   /* jot box sits at the bottom, above the keyboard (interactive-widget=resizes-content) */
   .capture{order:4;padding:8px 10px;border-top:1px solid var(--rule);border-bottom:0}
-  .capture textarea{font-size:17px;line-height:1.4;background:var(--paper);border:1px solid var(--rule);border-radius:24px;padding:12px 16px;min-height:48px;max-height:30vh}
-  .capture textarea:focus{border-color:var(--accent)}
-  .parse{margin:0 4px 8px;min-height:0}
+  .cap-box{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;border:0;background:none;box-shadow:none!important;cursor:default}
+  .cap-foot{display:contents}
+  .cap-foot .parse{order:-1;flex-basis:100%;margin:0 4px;min-width:0}
+  .capture textarea{flex:1;min-width:0;font-size:17px;line-height:1.4;background:var(--paper);border:1.5px solid var(--rule-strong);border-radius:22px;padding:11px 16px;min-height:48px;max-height:30vh}
+  .capture textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .parse.idle,.hint{display:none}
-  .capbtn{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--rule);background:var(--surface);color:var(--graphite);padding:0}
-  .capbtn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-  .capbtn.send{background:var(--accent);border-color:var(--accent);color:#fff}
+  .cap-actions{margin:0;gap:6px}
+  .capbtn{height:48px;padding:0 14px;border-radius:24px;font-size:14px}
+  .capbtn svg,.capbtn .lbl-long{display:none}
+  .capbtn .lbl-short{display:inline}
+  .grip-h{display:none}
 
   /* Material 3 style bottom navigation */
   .bnav{order:5;display:flex;background:var(--surface);border-top:1px solid var(--rule);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
@@ -352,7 +416,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
   .toast{bottom:calc(150px + env(safe-area-inset-bottom));width:max-content;max-width:calc(100vw - 24px)}
   body.typing .toast{bottom:88px}
 }
-@media (prefers-color-scheme: dark){ .primary,.capbtn.send,.weights button.on,.check.done,.cbox.on{color:#0E1A24} }
+@media (prefers-color-scheme: dark){ .primary,.capbtn.task,.capbtn.task:hover:not(:disabled),.weights button.on,.check.done,.cbox.on,.pick.on,.btn-ok{color:#0E1A24} }
 @keyframes edIn{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes sheetIn{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
@@ -361,7 +425,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 <body>
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Views and tags">
-    <div class="brand">NotePannuda<small>Jot first, organize later</small></div>
+    <div class="brand"><span class="brand-badge"><img src="logo-96.png" alt="" width="38" height="38"></span><span class="brand-text">NotePannuda<small>Jot first, organize later</small></span></div>
     <nav class="nav" id="nav"></nav>
     <div><h3>Tags</h3><div class="taglist" id="tags"></div></div>
     <div class="sync" id="sync"></div>
@@ -369,14 +433,19 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 
   <main class="main">
     <section class="capture">
-      <label for="cap" class="sr">Capture a jot</label>
-      <div class="parse" id="parse"></div>
-      <div class="cap-row">
-        <textarea id="cap" rows="1" placeholder="Jot anything. It's saved as you type." autocomplete="off" autocapitalize="sentences" enterkeyhint="send"></textarea>
-        <button class="capbtn" id="capTask" aria-pressed="false" aria-label="Save as task"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></button>
-        <button class="capbtn send" id="capSend" aria-label="Save jot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+      <label for="cap" class="sr">New jot</label>
+      <div class="cap-box">
+        <textarea id="cap" rows="1" placeholder="Type a note or task here. It's saved as you type." autocomplete="off" autocapitalize="sentences" enterkeyhint="send"></textarea>
+        <div class="cap-foot">
+          <div class="parse" id="parse"></div>
+          <div class="cap-actions">
+            <button class="capbtn note" id="capNote" disabled title="Save this jot as a note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4"/></svg><span class="lbl-long">Save note</span><span class="lbl-short">Note</span></button>
+            <button class="capbtn task" id="capTaskBtn" disabled title="Save this jot as a task (⌘+Enter)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span class="lbl-long">Save as task</span><span class="lbl-short">Task</span></button>
+          </div>
+        </div>
       </div>
     </section>
+    <div class="grip-h" id="capGrip" role="separator" aria-orientation="horizontal" aria-label="Resize the jot box" aria-valuemin="56" tabindex="0" title="Drag to resize the jot box. Double-click to reset."></div>
     <section class="toolbar">
       <div class="search">
         <button class="iconbtn menu-btn" id="menuBtn" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -390,8 +459,11 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
       <div class="seg" id="statusSeg" role="group" aria-label="Task status">
         <button data-s="all">All</button><button data-s="open">Open <span class="n"></span></button><button data-s="done">Completed <span class="n"></span></button>
       </div>
-      <div class="seg" id="prioSeg" role="group" aria-label="Priority filter">
-        <button data-p="3">High</button><button data-p="2">Med</button><button data-p="1">Low</button>
+      <div class="seg" id="prioSeg" role="group" aria-label="Priority filter, choose one or more">
+        <button data-p="3">High</button><button data-p="2">Med</button><button data-p="1">Low</button><button data-p="0" title="Tasks with no priority">None</button>
+      </div>
+      <div class="seg" id="weightSeg" role="group" aria-label="Weight filter, choose one or more">
+        <span class="seg-lab" aria-hidden="true">Weight</span><button data-w="1" aria-label="Weight 1">1</button><button data-w="2" aria-label="Weight 2">2</button><button data-w="3" aria-label="Weight 3">3</button><button data-w="4" aria-label="Weight 4">4</button><button data-w="5" aria-label="Weight 5">5</button><button data-w="0" title="Tasks with no weight">None</button>
       </div>
       <select class="sel" id="dueSel" aria-label="Due date filter">
         <option value="">Any due date</option><option value="overdue">Overdue</option><option value="today">Due today</option>
@@ -404,6 +476,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
       </div>
     </section>
     <div class="stats" id="stats" aria-live="polite"></div>
+    <div class="selbar" id="selbar" role="toolbar" aria-label="Selected jots" hidden></div>
     <div class="list" id="list" role="list"></div>
     <nav class="bnav" id="bnav" aria-label="Views">
       <button data-view="all"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M4 13h4l1.5 2.5h5L16 13h4M4 13l2.5-7h11L20 13v5H4z"/></svg></span><span class="lbl">All</span></button>
@@ -413,6 +486,8 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
   </main>
 
   <aside class="editor" id="editor" aria-label="Edit item"></aside>
+  <div class="grip" id="sideGrip" role="separator" aria-orientation="vertical" aria-label="Resize the sidebar" aria-valuemin="170" aria-valuemax="460" tabindex="0" title="Drag to resize. Double-click to reset."></div>
+  <div class="grip" id="edGrip" role="separator" aria-orientation="vertical" aria-label="Resize the editor" aria-valuemin="300" aria-valuemax="760" tabindex="0" title="Drag to resize. Double-click to reset."></div>
 </div>
 
 <div class="scrim" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
@@ -456,10 +531,10 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
     </div>
 
     <h4>Shortcuts and quick syntax</h4>
-    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">⌘</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close.</p>
+    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">⌘</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">⌘</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">⌘</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
     <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>–<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>–<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
     <p>Checklists: start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
-    <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
+    <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> or several at once like <code>p:high,med</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
   </div>
 </div>
 <div class="dscrim" id="drawerScrim"></div>
@@ -671,7 +746,7 @@ function retagAll() {
 
 // ---------- query engine ----------
 function parseQuery(q) {
-  const Q = { terms: [], neg: [], tags: [], negTags: [], is: new Set(), p: new Set(), due: null, w: null, sort: null };
+  const Q = { terms: [], neg: [], tags: [], negTags: [], is: new Set(), p: new Set(), due: null, w: new Set(), sort: null };
   const re = /(-?)"([^"]*)"?|(\S+)/g;
   let m;
   while ((m = re.exec(q))) {
@@ -682,9 +757,13 @@ function parseQuery(q) {
     let k;
     if (low[0] === '#' && low.length > 1) { (neg ? Q.negTags : Q.tags).push(low.slice(1)); continue; }
     if ((k = low.match(/^is:(task|note|done|open|conflict)$/))) { Q.is.add(k[1]); continue; }
-    if ((k = low.match(/^p:(.+)$/)) && PMAP[k[1]] !== undefined) { Q.p.add(PMAP[k[1]]); continue; }
+    if ((k = low.match(/^p:(.+)$/)) && k[1].split(',').every(x => PMAP[x] !== undefined)) { k[1].split(',').forEach(x => Q.p.add(PMAP[x])); continue; } // p:high,med
     if ((k = low.match(/^due:(overdue|today|week|none|any)$/))) { Q.due = k[1]; continue; }
-    if ((k = low.match(/^w:([1-5])$/))) { Q.w = +k[1]; continue; }
+    if ((k = low.match(/^w:(none|[0-5](?:-[0-5])?(?:,[0-5](?:-[0-5])?)*)$/))) { // w:3  w:2,3  w:3-5  w:none
+      if (k[1] === 'none') Q.w.add(0);
+      else for (const part of k[1].split(',')) { const [a, b = a] = part.split('-').map(Number); for (let x = Math.min(a, b); x <= Math.max(a, b); x++) Q.w.add(x); }
+      continue;
+    }
     if ((k = low.match(/^sort:(-?)([a-z]+)$/)) && SORT_ALIAS[k[2]]) { const f = SORT_ALIAS[k[2]]; Q.sort = { key: f, dir: FIELDS[f].dir * (k[1] ? -1 : 1) }; continue; }
     (neg ? Q.neg : Q.terms).push(low);
   }
@@ -728,7 +807,7 @@ function passFilters(it, Q, c) {
       if (due === 'week' && (it.due < c.td || it.due > c.wk)) return false;
     }
   }
-  if (Q.w && it.weight !== Q.w) return false;
+  if (c.weights.size && !(isTask && c.weights.has(it.weight || 0))) return false;
   for (const k of Q.is) {
     if (k === 'task' && !isTask) return false;
     if (k === 'note' && isTask) return false;
@@ -807,7 +886,7 @@ function runSearch() {
   const t0 = performance.now();
   const Q = parseQuery(state.q);
   const td = today();
-  const c = { td, wk: addDays(td, 7), prios: new Set([...state.prios, ...Q.p]) };
+  const c = { td, wk: addDays(td, 7), prios: new Set([...state.prios, ...Q.p]), weights: new Set([...state.weights, ...Q.w]) };
   let cand = null;
   for (const term of Q.terms) {
     if (term.length < 3) continue;
@@ -1462,10 +1541,11 @@ const DirectSync = {
   pending: new Set(), pushTimer: null, announced: new Set(),
   heard: new Map(), relayPeers: new Map(), rq: [], rqChars: 0, pumping: false, rparts: new Map(), relayPending: new Map(), relayTimer: null,
   roundMs: 60000, idleRoundMs: 300000,
-  paired() { return !!meta.pairCode; },
+  hasCode() { return !!meta.pairCode; },                                        // showing a code, or joined a group
+  paired() { return !!meta.pairCode && Object.keys(meta.peers || {}).length > 0; }, // at least one other device has joined
   open() { return [...this.peers.values()].filter(p => p.state === 'open'); },
   async start() {
-    if (!this.paired()) { this.state = 'off'; this.refresh(); return; }
+    if (!this.hasCode()) { this.state = 'off'; this.refresh(); return; }
     this.room = await deriveRoom(meta.pairCode);
     if (!meta.nostrKey) { meta.nostrKey = randHex(32); saveMeta(); }
     this.sk = fromHex(meta.nostrKey); this.pk = toHex(Schnorr.publicKey(this.sk));
@@ -1541,13 +1621,18 @@ const DirectSync = {
   },
   remember(id, name) {
     meta.peers = meta.peers || {};
+    if (!Object.keys(meta.peers).length && !meta.peers[id]) { this.justPaired = id; state.showPair = false; } // the first device just joined
     const cur = meta.peers[id] || {};
     if (!meta.peers[id] || (name && cur.name !== name)) { meta.peers[id] = { ...cur, name: name || cur.name || 'Another device' }; saveMeta(); }
     devices.set(id, { name: meta.peers[id].name });
   },
   opened(p) {
     const rp = this.relayPeers.get(p.id); if (rp) rp.active = false; // the direct connection takes over
-    if (!this.announced.has(p.id)) { this.announced.add(p.id); toast(`Connected to ${deviceLabel(p.id)}`); }
+    if (!this.announced.has(p.id)) {
+      this.announced.add(p.id);
+      if (this.justPaired === p.id) { this.justPaired = null; toast(`Paired with ${deviceLabel(p.id)}. Your devices will now sync.`); }
+      else toast(`Connected to ${deviceLabel(p.id)}`);
+    }
     p.send({ t: 'hi', name: deviceName(), rules: { text: meta.rulesText, stamp: meta.rulesUpdatedAt }, buckets: bucketHashes() });
     this.refresh();
   },
@@ -1742,7 +1827,7 @@ const DirectSync = {
   wake() { if (!this.room) return; Relays.revive(); this.checkAlive(); this.hello(true); },
   status() {
     const names = ps => ps.map(p => deviceLabel(p.id)).join(' and ');
-    if (!this.paired()) return { key: 'off', dot: '', text: 'Sync between devices is off', btn: '<button class="linkbtn" data-open-settings>Set up</button>' };
+    if (!this.hasCode()) return { key: 'off', dot: '', text: 'Sync between devices is off', btn: '<button class="linkbtn" data-open-settings>Set up</button>' };
     if (!navigator.onLine) return { key: 'offline', dot: 'busy', text: 'Offline. Changes will sync when you’re back online' };
     const open = this.open(), all = [...this.peers.values()];
     const viaRelay = [...this.relayPeers.keys()].filter(id => this.relayActive(id));
@@ -1757,8 +1842,11 @@ const DirectSync = {
     const failed = all.filter(p => p.state === 'failed');
     if (failed.length) return { key: 'failed', dot: 'err', text: `Couldn’t connect to ${names(failed)} directly on this network`, btn: '<button class="linkbtn" data-send-changes>Send changes</button>' };
     if (this.room && Relays.socks.size && !Relays.count()) return { key: 'relays', dot: 'err', text: 'Can’t reach the relays that introduce your devices' };
+    if (!this.paired()) return meta.pairRole === 'joined'
+      ? { key: 'pairing', dot: 'busy', text: 'Connecting to your other device…', btn: '<button class="linkbtn" data-open-settings>Details</button>' }
+      : { key: 'pairing', dot: 'busy', text: 'Waiting for your other device to pair', btn: '<button class="linkbtn" data-open-settings>Show code</button>' };
     const last = Math.max(0, ...Object.values(meta.peers || {}).map(x => x.lastSync || 0));
-    return { key: 'waiting', dot: '', text: Object.keys(meta.peers || {}).length ? `Paired${last ? `, last synced ${relTime(last)}` : ''}. Syncs when your other device is open` : 'Paired. Open NotePannuda on your other device' };
+    return { key: 'waiting', dot: '', text: `Paired${last ? `, last synced ${relTime(last)}` : ''}. Syncs when your other device is open` };
   },
   refresh() { renderSync(); if ($('#settings') && $('#settings').classList.contains('open')) renderSyncSettings(); }
 };
@@ -1766,13 +1854,13 @@ const DirectSync = {
 // ---------- pairing ----------
 const pairLink = () => /^https?:$/.test(location.protocol) ? `${location.origin}${location.pathname}#pair=${meta.pairCode}&name=${encodeURIComponent(deviceName())}` : '';
 async function beginPairing() {
-  if (!meta.pairCode) { meta.pairCode = newPairCode(); meta.peers = {}; await Local.setMeta(meta); await DirectSync.start(); }
+  if (!meta.pairCode) { meta.pairCode = newPairCode(); meta.pairRole = 'created'; meta.peers = {}; await Local.setMeta(meta); await DirectSync.start(); }
 }
 async function pairWith(code) {
   const c = normCode(code);
   if (c.length !== 26) throw new Error('A pairing code has 26 letters and numbers. Check it and try again.');
   if (c === meta.pairCode) return false;
-  DirectSync.stop(); meta.pairCode = c; meta.peers = {}; DirectSync.announced.clear();
+  DirectSync.stop(); meta.pairCode = c; meta.pairRole = 'joined'; meta.peers = {}; DirectSync.announced.clear();
   await Local.setMeta(meta); await DirectSync.start();
   return true;
 }
@@ -1793,7 +1881,7 @@ async function removeDevice(id) {
   await switchPairCode(code, id);
   return missed;
 }
-async function unpair() { DirectSync.stop(); meta.pairCode = ''; meta.peers = {}; devices.clear(); DirectSync.announced.clear(); await Local.setMeta(meta); DirectSync.refresh(); }
+async function unpair() { DirectSync.stop(); meta.pairCode = ''; meta.pairRole = ''; meta.peers = {}; devices.clear(); DirectSync.announced.clear(); await Local.setMeta(meta); DirectSync.refresh(); }
 function codeFromText(text) {
   const t = (text || '').trim();
   try { const u = new URL(t); const h = new URLSearchParams(u.hash.slice(1)); if (h.get('pair')) return { code: h.get('pair'), name: h.get('name') || '' }; } catch (e) { }
@@ -1901,7 +1989,139 @@ function askNotify() { try { if ('Notification' in window && Notification.permis
 // ---------- UI state + rendering ----------
 const state = { view: 'all', q: '', tags: new Set(), prios: new Set(), due: '', sortT: { key: 'smart', dir: -1, then: 'due', thenDir: 1 }, sortN: { key: 'updated', dir: -1 }, group: 'urgency', status: 'all', collapsed: new Set(['completed']), sel: null, limit: 200, results: [] };
 const VIEWS = [['all', 'Everything'], ['notes', 'Notes'], ['tasks', 'Open tasks'], ['today', 'Today'], ['upcoming', 'Next 7 days'], ['overdue', 'Overdue'], ['done', 'Completed']];
-const saveUI = () => { meta.ui = { status: state.status, collapsed: [...state.collapsed], sortT: state.sortT, sortN: state.sortN, group: state.group }; saveMeta(); };
+Object.assign(state, { capH: 96, weights: new Set(), selMode: false, picked: new Set(), allIds: [], lastPick: null, delArmed: false, sideW: 232, edW: 400 });
+const saveUI = () => { meta.ui = { status: state.status, collapsed: [...state.collapsed], sortT: state.sortT, sortN: state.sortN, group: state.group, sideW: state.sideW, edW: state.edW, capH: state.capH }; saveMeta(); };
+
+// ---------- selecting several jots ----------
+function enterSelect(firstId) {
+  state.selMode = true; state.picked = new Set(firstId ? [firstId] : []); state.lastPick = firstId || null; state.delArmed = false;
+  if (isPhone() && state.sel) closeEditor();
+  scheduleRender();
+}
+function exitSelect() { state.selMode = false; state.picked = new Set(); state.delArmed = false; scheduleRender(); }
+function togglePick(id, range) {
+  const order = state.results;
+  if (range && state.lastPick && order.includes(state.lastPick) && order.includes(id)) {
+    const a = order.indexOf(state.lastPick), b = order.indexOf(id);
+    for (let i = Math.min(a, b); i <= Math.max(a, b); i++) state.picked.add(order[i]); // Shift-click: select the whole range
+  } else state.picked.has(id) ? state.picked.delete(id) : state.picked.add(id);
+  state.lastPick = id; state.delArmed = false; scheduleRender();
+}
+function selectAll(on) { state.picked = new Set(on ? state.allIds : []); state.delArmed = false; scheduleRender(); }
+function deletePicked() {
+  const items = [...state.picked].map(id => S.items.get(id)).filter(it => it && !it.deleted);
+  if (!items.length) return;
+  if (items.length >= 50 && !state.delArmed) { // a big deletion asks for a second tap
+    state.delArmed = true; renderSelbar();
+    setTimeout(() => { if (state.delArmed) { state.delArmed = false; renderSelbar(); } }, 4000);
+    return;
+  }
+  for (const it of items) { it.deleted = true; touch(it, { silent: true }); }
+  if (state.sel && items.some(it => it.id === state.sel)) closeEditor();
+  exitSelect(); buzz(15);
+  toast(`Deleted ${items.length.toLocaleString()} ${items.length === 1 ? 'jot' : 'jots'}`, 'Undo', () => { for (const it of items) { it.deleted = false; touch(it, { silent: true }); } scheduleRender(); });
+}
+function completePicked() {
+  const sel = [...state.picked].map(id => S.items.get(id)).filter(it => it && !it.deleted);
+  const tasks = sel.filter(it => it.type === 'task');
+  if (!tasks.length) { toast('Select at least one task to complete.'); return; }
+  const reopen = tasks.every(t => t.done);
+  const changed = tasks.filter(t => reopen ? t.done : !t.done);
+  const before = changed.map(t => [t, t.done, t.doneAt]);
+  for (const t of changed) setDone(t, !reopen);
+  if (state.sel && changed.some(t => t.id === state.sel)) renderEditor();
+  exitSelect(); buzz(15);
+  const notes = sel.length - tasks.length;
+  toast(`${reopen ? 'Reopened' : 'Completed'} ${changed.length.toLocaleString()} ${changed.length === 1 ? 'task' : 'tasks'}${notes ? ` (${notes} ${notes === 1 ? 'note' : 'notes'} skipped)` : ''}`, 'Undo', () => {
+    for (const [t, done, at] of before) { t.done = done; t.doneAt = at; touch(t, { silent: true }); }
+    scheduleRender(); if (state.sel) renderEditor();
+  });
+}
+function renderSelbar() {
+  const bar = $('#selbar'); if (!bar) return;
+  $('#list').classList.toggle('selecting', state.selMode);
+  if (!state.selMode) { bar.hidden = true; return; }
+  const n = state.allIds.length, k = state.picked.size, all = n > 0 && k === n;
+  const tasks = [...state.picked].map(id => S.items.get(id)).filter(it => it && it.type === 'task');
+  const reopen = tasks.length > 0 && tasks.every(t => t.done);
+  const doneLabel = `${reopen ? 'Reopen' : 'Complete'}${tasks.length && tasks.length !== k ? ` ${tasks.length.toLocaleString()} ${tasks.length === 1 ? 'task' : 'tasks'}` : ''}`;
+  bar.hidden = false;
+  bar.innerHTML = `<label><input type="checkbox" id="selAll" ${all ? 'checked' : ''}> Select all (${n.toLocaleString()})</label>
+    <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span>
+    <button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
+    <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>
+    <button class="ghost" data-selact="cancel">Cancel</button>`;
+  $('#selAll').indeterminate = k > 0 && !all;
+}
+
+// ---------- resizable side panels (wide screens) ----------
+function applyPanelSizes() {
+  const r = document.documentElement.style;
+  r.setProperty('--side-w', state.sideW + 'px'); r.setProperty('--ed-w', state.edW + 'px');
+  const sg = $('#sideGrip'), eg = $('#edGrip');
+  if (sg) { sg.setAttribute('aria-valuenow', state.sideW); }
+  if (eg) { eg.setAttribute('aria-valuenow', state.edW); }
+}
+function panelLimits(which) {
+  const W = window.innerWidth, editing = $('#app').classList.contains('editing');
+  return which === 'side' ? [170, Math.max(170, Math.min(460, W - (editing ? state.edW : 0) - 380))] : [300, Math.max(300, Math.min(760, W - state.sideW - 380))];
+}
+function setPanel(which, v) {
+  const [lo, hi] = panelLimits(which), w = Math.round(Math.max(lo, Math.min(hi, v)));
+  if (which === 'side') state.sideW = w; else state.edW = w;
+  applyPanelSizes();
+}
+function applyCapHeight() {
+  document.documentElement.style.setProperty('--cap-h', state.capH + 'px');
+  const g = $('#capGrip'); if (g) g.setAttribute('aria-valuenow', state.capH);
+  const cap = $('#cap'); if (cap) autoGrow(cap);
+}
+function setCapHeight(v) { state.capH = Math.round(Math.max(56, Math.min(window.innerHeight * 0.55, v))); applyCapHeight(); }
+function bindCapGrip() {
+  const g = $('#capGrip');
+  g.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault(); g.setPointerCapture(e.pointerId); document.body.classList.add('resizing-v');
+    const y0 = e.clientY, h0 = state.capH;
+    const move = ev => setCapHeight(h0 + ev.clientY - y0);
+    const up = () => { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); document.body.classList.remove('resizing-v'); saveUI(); };
+    g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+  });
+  g.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 40 : 12;
+    if (e.key === 'ArrowDown') setCapHeight(state.capH + step);
+    else if (e.key === 'ArrowUp') setCapHeight(state.capH - step);
+    else if (e.key === 'Home' || e.key === 'Enter') setCapHeight(96);
+    else return;
+    e.preventDefault(); saveUI();
+  });
+  g.addEventListener('dblclick', () => { setCapHeight(96); saveUI(); });
+  applyCapHeight();
+}
+function bindResizers() {
+  for (const [id, which, dflt] of [['sideGrip', 'side', 232], ['edGrip', 'ed', 400]]) {
+    const g = $('#' + id);
+    g.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault(); g.setPointerCapture(e.pointerId); document.body.classList.add('resizing');
+      const move = ev => setPanel(which, which === 'side' ? ev.clientX : window.innerWidth - ev.clientX);
+      const up = () => { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); document.body.classList.remove('resizing'); saveUI(); };
+      g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+    });
+    g.addEventListener('keydown', e => {
+      const step = e.shiftKey ? 40 : 10, cur = which === 'side' ? state.sideW : state.edW;
+      let v;
+      if (e.key === 'ArrowLeft') v = which === 'side' ? cur - step : cur + step;
+      else if (e.key === 'ArrowRight') v = which === 'side' ? cur + step : cur - step;
+      else if (e.key === 'Home' || e.key === 'Enter') v = dflt;
+      else return;
+      e.preventDefault(); setPanel(which, v); saveUI();
+    });
+    g.addEventListener('dblclick', () => { setPanel(which, dflt); saveUI(); });
+  }
+  window.addEventListener('resize', debounce(() => { setPanel('side', state.sideW); setPanel('ed', state.edW); }, 150));
+  applyPanelSizes();
+}
 
 // Tasks checked off in the last moment stay in place briefly so the check is visible, then move to Completed.
 const justDone = new Map();
@@ -1972,16 +2192,23 @@ function closeDrawer() { if (!Back.close('drawer')) closeDrawerNow(); }
 const Swipe = { active: false, pending: false };
 function bindSwipe() {
   const list = $('#list');
-  let s = null, suppress = false;
+  let s = null, suppress = false, lpSuppress = false;
   const threshold = row => Math.min(120, row.offsetWidth * 0.33);
   list.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'mouse' || !e.isPrimary) return;
+    if (e.pointerType === 'mouse' || !e.isPrimary || state.selMode) return;
     const row = e.target.closest('.item'); if (!row) return;
-    s = { row, x: e.clientX, y: e.clientY, id: e.pointerId, dx: 0, lock: null, armed: false, bg: null };
+    const cur = s = { row, x: e.clientX, y: e.clientY, id: e.pointerId, dx: 0, lock: null, armed: false, bg: null, lp: null };
+    cur.lp = setTimeout(() => { // long-press: start selecting with this jot
+      if (s !== cur || cur.lock) return;
+      s = null; lpSuppress = true; setTimeout(() => { lpSuppress = false; }, 1500);
+      buzz(20); enterSelect(row.dataset.id);
+    }, 500);
   }, { passive: true });
+  list.addEventListener('contextmenu', e => { if (isPhone() && e.target.closest('.item')) e.preventDefault(); });
   list.addEventListener('pointermove', e => {
     if (!s || e.pointerId !== s.id) return;
     const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (s.lp && Math.hypot(dx, dy) > 8) { clearTimeout(s.lp); s.lp = null; }
     if (!s.lock) {
       if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.4) {
         s.lock = 'x'; Swipe.active = true;
@@ -2003,7 +2230,7 @@ function bindSwipe() {
   });
   const end = e => {
     if (!s || e.pointerId !== s.id) return;
-    const cur = s; s = null;
+    const cur = s; s = null; clearTimeout(cur.lp);
     if (cur.lock !== 'x') return;
     suppress = true; setTimeout(() => { suppress = false; }, 100); // only the click this drag itself produces
     const it = S.items.get(cur.row.dataset.id);
@@ -2024,7 +2251,7 @@ function bindSwipe() {
   };
   list.addEventListener('pointerup', end);
   list.addEventListener('pointercancel', end);
-  list.addEventListener('click', e => { if (suppress) { e.stopPropagation(); e.preventDefault(); suppress = false; } }, true);
+  list.addEventListener('click', e => { if (suppress || lpSuppress) { e.stopPropagation(); e.preventDefault(); suppress = false; lpSuppress = false; } }, true);
 }
 
 // Shared links and home-screen shortcuts arrive as URL parameters.
@@ -2121,8 +2348,10 @@ function rowHTML(it, terms, td) {
   const auto = new Set(it.autoTags || []);
   for (const t of (S.tg[S.num.get(it.id)] || [])) meta.push(`<span class="pill ${auto.has(t) ? 'auto' : ''}">#${esc(t)}</span>`);
   const when = it.done && it.doneAt ? 'Completed ' + relTime(it.doneAt) : relTime(it.updatedAt);
-  return `<div class="item ${state.sel === it.id ? 'sel' : ''} ${it.done ? 'isdone' : ''} ${pending ? 'justdone' : ''}" role="listitem" data-id="${esc(it.id)}">
-    ${isTask ? `<button class="check p${it.priority} ${it.done ? 'done' : ''}" role="checkbox" aria-checked="${it.done}" data-act="done" aria-label="${it.done ? 'Reopen' : 'Complete'} ${esc(title)}">${it.done ? CHECK : ''}</button>` : '<span class="notemark" aria-hidden="true"></span>'}
+  const picked = state.selMode && state.picked.has(it.id);
+  const lead = state.selMode ? `<button class="pick ${picked ? 'on' : ''}" role="checkbox" aria-checked="${picked}" data-act="pick" aria-label="Select ${esc(title)}">${picked ? CHECK : ''}</button>` : null;
+  return `<div class="item ${state.sel === it.id && !state.selMode ? 'sel' : ''} ${picked ? 'picked' : ''} ${it.done ? 'isdone' : ''} ${pending ? 'justdone' : ''}" role="listitem" data-id="${esc(it.id)}">
+    ${lead || (isTask ? `<button class="check p${it.priority} ${it.done ? 'done' : ''}" role="checkbox" aria-checked="${it.done}" data-act="done" aria-label="${it.done ? 'Reopen' : 'Complete'} ${esc(title)}">${it.done ? CHECK : ''}</button>` : '<span class="notemark" aria-hidden="true"></span>')}
     <div><div class="t">${hl(title, terms)}</div>${snippet ? `<div class="s">${hl(snippet, terms)}</div>` : ''}${clHTML}${meta.length ? `<div class="m">${meta.join('')}</div>` : ''}</div>
     <div class="acts"><span class="when">${when}</span><div class="quick"><button class="mini" data-act="toggle">${isTask ? 'Make note' : 'Make task'}</button><button class="mini" data-act="del">Delete</button></div></div>
   </div>`;
@@ -2189,6 +2418,8 @@ function renderList() {
     html.push(take.map(it => rowHTML(it, terms, td)).join(''));
   }
   state.results = shown.map(i => i.id);
+  state.allIds = res.map(i => i.id);
+  if (state.selMode) { const keep = new Set(state.allIds); for (const id of [...state.picked]) if (!keep.has(id)) state.picked.delete(id); }
   if (!res.length) {
     const total = [...S.items.values()].filter(i => !i.deleted).length;
     const filtered = state.q || state.tags.size || state.prios.size || state.due || state.view !== 'all';
@@ -2202,12 +2433,14 @@ function renderList() {
   }
   const total = S.items.size;
   const chips = [...state.tags].map(t => `<span class="chip pill">#${esc(t)}<button data-untag="${esc(t)}" aria-label="Remove tag filter ${esc(t)}">×</button></span>`).join('');
-  const anyFilter = state.q || state.tags.size || state.prios.size || state.due || state.status !== 'all';
+  const anyFilter = state.q || state.tags.size || state.prios.size || state.weights.size || state.due || state.status !== 'all';
   let nConf = 0; for (const x of S.items.values()) if (!x.deleted && x.conflicts && openConflicts(x).length) nConf++;
   const confBtn = nConf && !Q.is.has('conflict') ? `<button class="linkbtn conflict-link" data-conflicts>${nConf} ${nConf === 1 ? 'jot was' : 'jots were'} edited on two devices. Review</button>` : '';
   const nudge = Q.terms.length && !Q.sort && state.sortT.key !== 'relevance' ? '<button class="linkbtn" data-preset="match">Sort by best match</button>' : '';
-  $('#stats').innerHTML = `<span>${res.length.toLocaleString()} ${res.length === 1 ? 'item' : 'items'}</span><span class="st-time">searched ${total.toLocaleString()} in ${ms < 1 ? ms.toFixed(2) : ms.toFixed(1)} ms</span><button class="linkbtn subtle st-sort" data-opensort>${esc(sortSummary(Q))}</button>${confBtn}${nudge}${chips}${anyFilter ? '<button class="linkbtn" data-clear>Clear filters</button>' : ''}`;
+  renderSelbar();
+  $('#stats').innerHTML = `<span>${res.length.toLocaleString()} ${res.length === 1 ? 'item' : 'items'}</span>${!state.selMode && res.length ? '<button class="linkbtn" data-select>Select</button>' : ''}<span class="st-time">searched ${total.toLocaleString()} in ${ms < 1 ? ms.toFixed(2) : ms.toFixed(1)} ms</span><button class="linkbtn subtle st-sort" data-opensort>${esc(sortSummary(Q))}</button>${confBtn}${nudge}${chips}${anyFilter ? '<button class="linkbtn" data-clear>Clear filters</button>' : ''}`;
   document.querySelectorAll('#statusSeg button').forEach(b => { const on = state.status === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('#weightSeg button').forEach(b => { const on = state.weights.has(+b.dataset.w); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   document.querySelectorAll('#prioSeg button').forEach(b => { const on = state.prios.has(+b.dataset.p); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
 }
 
@@ -2254,14 +2487,14 @@ function renderSync() {
   const sync = row(st.dot, esc(st.text), st.btn || '');
   const dot = $('#syncDot');
   if (dot) {
-    dot.dataset.state = { connected: 'ok', connecting: 'busy', offline: 'busy', failed: 'err', relays: 'err' }[st.key] || (localDot === 'err' ? 'err' : 'off');
+    dot.dataset.state = { connected: 'ok', connecting: 'busy', pairing: 'busy', offline: 'busy', failed: 'err', relays: 'err' }[st.key] || (localDot === 'err' ? 'err' : 'off');
     dot.setAttribute('aria-label', st.text + '. Open menu for details.');
   }
   el.innerHTML = row(localDot, (Local.error ? esc(Local.error) : localLabel) + (Local.lastSaved ? ' ' + relTime(Local.lastSaved) : '')) + sync + `<div><button class="linkbtn" data-open-settings>Settings and shortcuts</button></div>`;
 }
 
 function renderParse(it) {
-  const hint = '<span class="hint"><span><span class="kbd">Enter</span> save</span><span><span class="kbd">⌘</span> <span class="kbd">Enter</span> save as task</span></span>';
+  const hint = '<span class="hint"><span><span class="kbd">Enter</span> save</span><span><span class="kbd">⌘</span> <span class="kbd">Enter</span> save as task</span><span><span class="kbd">Shift</span> <span class="kbd">Enter</span> new line</span></span>';
   const el = $('#parse');
   el.classList.toggle('idle', !it);
   if (!it) { el.innerHTML = `<span>Try <code>Call Sam about the invoice !h due:fri #acme</code> or start a line with <code>[]</code> for a checklist</span>${hint}`; return; }
@@ -2386,13 +2619,21 @@ function del(it) {
   toast('Deleted', 'Undo', () => { it.deleted = false; touch(it); });
 }
 
-function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 180) + 'px'; }
+function autoGrow(el) {
+  const max = isPhone() ? window.innerHeight * 0.3 : Math.max(280, state.capH + 180);
+  el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight + 2, max) + 'px';
+}
+function updateCapButtons() {
+  const empty = !$('#cap').value.trim();
+  for (const id of ['capNote', 'capTaskBtn']) { const b = $('#' + id); if (b) b.disabled = empty; }
+}
 
 function onCaptureInput() {
   const cap = $('#cap');
   autoGrow(cap);
   const raw = cap.value;
   let it = capId && S.items.get(capId);
+  updateCapButtons();
   if (!raw.trim()) {
     if (it) { it.deleted = true; touch(it); }
     capId = null; renderParse(null); return;
@@ -2406,12 +2647,13 @@ function onCaptureInput() {
   renderParse(it);
 }
 
-function commitCapture(asTask) {
+function commitCapture(mode) { // mode: 'note' or 'task' (buttons, ⌘+Enter), or empty for Enter: the jot's own syntax decides
   const cap = $('#cap');
   const it = capId && S.items.get(capId);
   if (!it || !cap.value.trim()) return;
-  if (asTask && it.type !== 'task') { it.type = 'task'; touch(it); }
-  capId = null; cap.value = ''; autoGrow(cap); renderParse(null); setCapTask(false); buzz(8);
+  const want = mode === true || mode === 'task' ? 'task' : mode === 'note' ? 'note' : null;
+  if (want && it.type !== want) { it.type = want; touch(it); }
+  capId = null; cap.value = ''; autoGrow(cap); renderParse(null); setCapTask(false); updateCapButtons(); buzz(8);
   toast(`Saved as ${it.type}`, 'Open', () => select(it.id));
 }
 
@@ -2484,9 +2726,9 @@ function bindUI() {
       if (!e.metaKey && !e.ctrlKey) {
         const r = listEnter(cap, true);
         if (r === 'continued') return onCaptureInput();
-        if (r === 'ended') { onCaptureInput(); return commitCapture(false); }
+        if (r === 'ended') { onCaptureInput(); return commitCapture(); }
       }
-      commitCapture(e.metaKey || e.ctrlKey);
+      commitCapture(e.metaKey || e.ctrlKey ? 'task' : '');
     }
     if (e.key === 'Escape') cap.blur();
   });
@@ -2508,14 +2750,17 @@ function bindUI() {
     if (b.dataset.view) { state.view = b.dataset.view; state.limit = 200; $('#list').scrollTop = 0; scheduleRender(); }
   });
   // phone jot box: Task toggle and Save keep the keyboard open for rapid jotting
-  ['capTask', 'capSend'].forEach(id => $('#' + id).addEventListener('pointerdown', e => e.preventDefault()));
-  $('#capTask').addEventListener('click', () => setCapTask(!capForceTask));
-  $('#capSend').addEventListener('click', () => { if ($('#cap').value.trim()) commitCapture(capForceTask); $('#cap').focus(); });
+  ['capNote', 'capTaskBtn'].forEach(id => $('#' + id).addEventListener('pointerdown', e => e.preventDefault()));
+  $('#capNote').addEventListener('click', () => { commitCapture('note'); $('#cap').focus(); });
+  $('#capTaskBtn').addEventListener('click', () => { commitCapture('task'); $('#cap').focus(); });
+  updateCapButtons();
+  bindCapGrip();
   // hide the bottom bar while the keyboard is up
   const typingOn = e => { if (isPhone() && (e.target.id === 'cap' || e.target.id === 'q')) document.body.classList.add('typing'); };
   const typingOff = () => setTimeout(() => { const a = document.activeElement; if (!a || (a.id !== 'cap' && a.id !== 'q')) document.body.classList.remove('typing'); }, 60);
   document.addEventListener('focusin', typingOn); document.addEventListener('focusout', typingOff);
   bindSwipe();
+  $('#weightSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const w = +b.dataset.w; state.weights.has(w) ? state.weights.delete(w) : state.weights.add(w); state.limit = 200; scheduleRender(); });
   $('#prioSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = +b.dataset.p; state.prios.has(p) ? state.prios.delete(p) : state.prios.add(p); scheduleRender(); });
   $('#statusSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.status = b.dataset.s; state.limit = 200; saveUI(); scheduleRender(); });
   $('#dueSel').addEventListener('change', e => { state.due = e.target.value; scheduleRender(); });
@@ -2555,10 +2800,11 @@ function bindUI() {
   $('#stats').addEventListener('click', e => {
     const pr = e.target.closest('[data-preset]'); if (pr) applyPreset(pr.dataset.preset);
     if (e.target.closest('[data-opensort]')) { e.stopPropagation(); openSort(); }
+    if (e.target.closest('[data-select]')) enterSelect();
     if (e.target.closest('[data-conflicts]')) { state.q = 'is:conflict'; $('#q').value = 'is:conflict'; state.view = 'all'; scheduleRender(); }
   });
 
-  const clearAll = () => { state.q = ''; q.value = ''; state.tags.clear(); state.prios.clear(); state.due = ''; $('#dueSel').value = ''; state.view = 'all'; state.status = 'all'; saveUI(); scheduleRender(); };
+  const clearAll = () => { state.q = ''; q.value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.view = 'all'; state.status = 'all'; saveUI(); scheduleRender(); };
   $('#stats').addEventListener('click', e => {
     const u = e.target.closest('[data-untag]');
     if (u) { state.tags.delete(u.dataset.untag); scheduleRender(); }
@@ -2572,6 +2818,8 @@ function bindUI() {
     if (grp) { const k = grp.dataset.grp; state.collapsed.has(k) ? state.collapsed.delete(k) : state.collapsed.add(k); saveUI(); return scheduleRender(); }
     const row = e.target.closest('.item'); if (!row) return;
     const it = S.items.get(row.dataset.id); if (!it) return;
+    if (state.selMode) { e.preventDefault(); return togglePick(it.id, e.shiftKey); }
+    if (e.metaKey || e.ctrlKey) { e.preventDefault(); return enterSelect(it.id); }
     const act = e.target.closest('[data-act]');
     if (act) {
       e.stopPropagation();
@@ -2583,6 +2831,15 @@ function bindUI() {
     }
     select(it.id);
   });
+
+  $('#selbar').addEventListener('change', e => { if (e.target.id === 'selAll') selectAll(e.target.checked); });
+  $('#selbar').addEventListener('click', e => {
+    const b = e.target.closest('[data-selact]'); if (!b) return;
+    if (b.dataset.selact === 'delete') deletePicked();
+    if (b.dataset.selact === 'complete') completePicked();
+    if (b.dataset.selact === 'cancel') exitSelect();
+  });
+  bindResizers();
 
   const ed = $('#editor');
   ed.addEventListener('input', e => {
@@ -2636,9 +2893,13 @@ function bindUI() {
     if (e.key === 'Escape') {
       if ($('#settings').classList.contains('open')) return closeSettings();
       if (!$('#sortPanel').hidden) { closeSort(); return $('#sortBtn').focus(); }
+      if (!typing && state.selMode) return exitSelect();
       if (!typing && state.sel) return closeEditor();
       return;
     }
+    if (state.selMode && !typing && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') { e.preventDefault(); return selectAll(true); }
+    if (state.selMode && !typing && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); return deletePicked(); }
+    if (state.selMode && !typing && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === 'x') { e.preventDefault(); return completePicked(); }
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === '/') { e.preventDefault(); q.focus(); q.select(); }
     else if (e.key === 'n') { e.preventDefault(); cap.focus(); }
@@ -2673,6 +2934,7 @@ function bindUI() {
       }
     }
     if (act === 'show') { await beginPairing(); state.showPair = true; state.enterCode = false; }
+    if (act === 'enter' && DirectSync.hasCode() && !DirectSync.paired()) { state.showPair = false; }
     if (act === 'hide') state.showPair = false;
     if (act === 'scan') { state.enterCode = false; Scanner.open(); }
     if (act === 'enter') { state.enterCode = true; state.showPair = false; }
@@ -2688,10 +2950,17 @@ function bindUI() {
       catch (err) { toast(err.message); }
     }
     if (act === 'cancel-pair') state.pendingPair = null;
+    if (act === 'cancel-pairing') { state.showPair = false; state.enterCode = false; await unpair(); toast('Pairing cancelled.'); }
     if (act === 'now') { DirectSync.wake(); DirectSync.resync(); toast(DirectSync.open().length ? 'Syncing now.' : 'Looking for your other devices…'); }
-    if (act === 'unpair') {
-      if (!state.unpairArmed) { state.unpairArmed = true; setTimeout(() => { state.unpairArmed = false; renderSyncSettings(); }, 4000); }
-      else { state.unpairArmed = false; state.showPair = false; await unpair(); toast('Unpaired. Your notes stay on this device.'); }
+    if (act === 'unpair') { // one tap; Undo puts the pairing back if it was a mistake
+      const before = { code: meta.pairCode, role: meta.pairRole, peers: { ...(meta.peers || {}) } };
+      state.showPair = false; await unpair();
+      toast('Unpaired. Your notes stay on this device.', 'Undo', async () => {
+        meta.pairCode = before.code; meta.pairRole = before.role; meta.peers = before.peers;
+        for (const [id, pr] of Object.entries(before.peers)) devices.set(id, { name: pr.name });
+        await Local.setMeta(meta); await DirectSync.start(); DirectSync.refresh();
+        toast('Pairing restored.');
+      });
     }
     if (act === 'copy-code' || act === 'copy-link') {
       const text = act === 'copy-code' ? fmtCode(meta.pairCode) : pairLink();
@@ -2703,7 +2972,7 @@ function bindUI() {
   $('#saveRelays').addEventListener('click', async () => {
     const list = $('#relayList').value.split(/\s+/).map(x => x.trim()).filter(x => /^wss?:\/\//.test(x));
     meta.relays = list.length ? list : null; await Local.setMeta(meta);
-    if (DirectSync.paired()) { DirectSync.stop(); await DirectSync.start(); }
+    if (DirectSync.hasCode()) { DirectSync.stop(); await DirectSync.start(); }
     toast(list.length ? `Using ${list.length} ${list.length === 1 ? 'relay' : 'relays'}.` : 'Back to the default relays.'); renderSyncSettings();
   });
   $('#scanClose').addEventListener('click', () => Scanner.close());
@@ -2753,7 +3022,7 @@ function bindUI() {
 function openSettings() {
   $('#rulesTa').value = meta.rulesText;
   $('#deviceName').value = deviceName();
-  state.showPair = state.showPair && DirectSync.paired(); state.unpairArmed = false; state.removeArmed = null;
+  state.showPair = state.showPair && DirectSync.hasCode(); state.unpairArmed = false; state.removeArmed = null;
   renderSyncSettings();
   $('#settings').classList.add('open');
   Back.push('settings', closeSettingsNow);
@@ -2769,7 +3038,13 @@ function renderSyncSettings() {
     const who = state.pendingPair.name ? esc(state.pendingPair.name) : 'your other device';
     html = `<div class="acct-card"><div><strong>Pair this device with ${who}?</strong><p>It joins ${who}'s group of devices, and they sync directly whenever the apps are open. ${DirectSync.paired() ? 'This replaces the current pairing on this device.' : ''}</p></div>
       <div class="actions"><button class="primary" data-sync="confirm-pair">Pair</button><button class="ghost" data-sync="cancel-pair">Not now</button></div></div>`;
-  } else if (!DirectSync.paired()) {
+  } else if (DirectSync.hasCode() && !DirectSync.paired()) {
+    html = meta.pairRole === 'joined'
+      ? `<div class="acct-card"><div><strong>Connecting to your other device…</strong><p>Make sure NotePannuda is open on the device whose code you used. This updates by itself when they connect.</p></div>
+        <div class="actions"><button class="ghost" data-sync="cancel-pairing">Cancel</button></div></div>`
+      : `<div class="acct-card"><div><strong>Waiting for your other device</strong><p>Scan this code with your other device, or open NotePannuda there and choose <em>Enter a code</em>. This updates by itself when it connects.</p></div>
+        <div class="actions"><button class="ghost" data-sync="cancel-pairing">Cancel pairing</button><button class="ghost" data-sync="enter">Enter a code instead</button></div></div>`;
+  } else if (!DirectSync.hasCode()) {
     html = `<div class="acct-card"><div><strong>Not paired yet</strong><p>Pair your devices once: phone, computer, tablet, as many as you like. After that they sync directly whenever the apps are open, with no accounts and nothing to install.</p></div>
       <div class="actions"><button class="primary" data-sync="show">Show pairing code</button>${Scanner.supported() ? '<button class="ghost" data-sync="scan">Scan a code</button>' : ''}<button class="ghost" data-sync="enter">Enter a code</button></div></div>`;
   } else {
@@ -2785,9 +3060,10 @@ function renderSyncSettings() {
       ${state.removeArmed ? '<p class="faint">Removing a device moves the rest of your devices to a new pairing code, so the removed one can’t sync any more. Devices that aren’t connected right now will need to pair again.</p>' : ''}
       ${state.missedAfterRemove ? `<p class="warn-text">Pair ${esc(state.missedAfterRemove)} again: ${state.missedAfterRemove.includes(' and ') ? 'they weren’t' : 'it wasn’t'} connected when the code changed.</p>` : ''}
       ${st.key === 'failed' ? `<p>Some networks block direct connections. It will keep trying${fallbackOn() ? ', and uses the relays for small changes whenever the other device is online' : ''}. Meanwhile, you can use Send changes below.</p>` : ''}</div>
-      <div class="actions"><button class="primary" data-sync="now">Sync now</button><button class="ghost" data-sync="${state.showPair ? 'hide' : 'show'}">${state.showPair ? 'Hide code' : 'Add a device'}</button><button class="ghost danger" data-sync="unpair">${state.unpairArmed ? 'Select again to unpair' : 'Unpair'}</button></div></div>`;
+      <div class="actions"><button class="primary" data-sync="now">Sync now</button><button class="ghost" data-sync="${state.showPair ? 'hide' : 'show'}">${state.showPair ? 'Hide code' : 'Add a device'}</button><button class="ghost danger" data-sync="unpair">Unpair</button></div></div>`;
   }
-  if (state.showPair && DirectSync.paired() && !state.pendingPair) {
+  const waiting = DirectSync.hasCode() && !DirectSync.paired() && meta.pairRole !== 'joined';
+  if (((waiting && !state.enterCode) || (state.showPair && DirectSync.paired())) && !state.pendingPair) {
     const link = pairLink();
     html += `<div class="pair-panel">
       <div class="qr">${QR.svg(link || meta.pairCode, 'Pairing code for NotePannuda')}</div>
@@ -2828,6 +3104,9 @@ async function init() {
     if (meta.ui.sortT && FIELDS[meta.ui.sortT.key]) state.sortT = meta.ui.sortT;
     if (meta.ui.sortN && FIELDS[meta.ui.sortN.key]) state.sortN = meta.ui.sortN;
     if (meta.ui.group) state.group = meta.ui.group;
+    if (meta.ui.sideW) state.sideW = meta.ui.sideW;
+    if (meta.ui.edW) state.edW = meta.ui.edW;
+    if (meta.ui.capH) state.capH = meta.ui.capH;
   }
   const shards = await Local.loadShards();
   for (const sh of shards) for (const it of (sh.items || [])) {

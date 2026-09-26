@@ -9,7 +9,7 @@ set -euo pipefail
 
 REPO="${1:-notepannuda}"
 cd "$(dirname "$0")"
-FILES="notepannuda.html sw.js manifest.webmanifest icon.svg icon-180.png icon-192.png icon-512.png icon-maskable-512.png shortcut-new.png shortcut-tasks.png"
+FILES="notepannuda.html index.html sw.js manifest.webmanifest favicon.ico favicon.svg favicon-16.png favicon-32.png apple-touch-icon.png icon-192.png icon-512.png icon-maskable-512.png logo-96.png shortcut-new.png shortcut-tasks.png"
 
 say() { printf '\n%s\n' "$*"; }
 need() { command -v "$1" >/dev/null 2>&1; }
