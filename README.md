@@ -2,7 +2,7 @@
 
 Jot first, organize later. NotePannuda is a fast, local-first notes and tasks app that runs in your browser and installs like an app on your Mac and your Android phone. Paired devices sync directly with each other: no accounts, no cloud storage, no server of your own.
 
-**Your app's address after publishing:** `https://YOUR-USERNAME.github.io/notepannuda/notepannuda.html`
+**Your app's address after publishing:** `https://araghunathan99.github.io/notepannuda/notepannuda.html`
 
 ## Features
 
