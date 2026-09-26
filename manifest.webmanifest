@@ -1,0 +1,91 @@
+{
+  "name": "NotePannuda",
+  "short_name": "NotePannuda",
+  "description": "Jot first, organize later. Notes and tasks that sync directly between your devices.",
+  "start_url": "./notepannuda.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F5F8",
+  "theme_color": "#F3F5F8",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "id": "./notepannuda.html",
+  "orientation": "any",
+  "categories": [
+    "productivity"
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "New jot",
+      "short_name": "New jot",
+      "url": "./notepannuda.html?action=new",
+      "icons": [
+        {
+          "src": "shortcut-new.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "short_name": "Tasks",
+      "url": "./notepannuda.html?view=tasks",
+      "icons": [
+        {
+          "src": "shortcut-tasks.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "./notepannuda.html?share=1",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": [
+            "application/json",
+            "text/plain",
+            ".json",
+            ".txt"
+          ]
+        }
+      ]
+    }
+  }
+}
