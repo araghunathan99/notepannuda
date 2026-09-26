@@ -284,6 +284,9 @@ body.resizing *{cursor:col-resize!important}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-badge{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 0 0 1px var(--rule);overflow:hidden}
 .brand-badge img{width:38px;height:38px;object-fit:contain;display:block}
+.time-in{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:2px 6px;font-size:13px;margin-left:4px}
+.stats .mini{padding:2px 9px;font-size:12px;line-height:1.4}
+.cap-handle,.fab{display:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .menu-btn{display:none}
 .filters{display:contents}
@@ -366,6 +369,14 @@ body.resizing *{cursor:col-resize!important}
   .capbtn svg{display:inline;width:20px;height:20px}
   .capbtn .lbl-long,.capbtn .lbl-short{display:none}
   .grip-h{display:none}
+  .capture{padding-top:0}
+  .cap-handle{display:flex;align-items:center;justify-content:center;width:100%;height:22px;border:0;background:none;padding:0;margin:0 0 2px;touch-action:none;cursor:pointer}
+  .cap-handle span{width:40px;height:4px;border-radius:2px;background:var(--rule-strong)}
+  .cap-handle:active span{background:var(--accent)}
+  body.cap-collapsed .capture{display:none}
+  .fab:not([hidden]){display:grid;place-items:center;position:fixed;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:16px;border:0;background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(10,20,30,.28);z-index:8}
+  .fab:active{filter:brightness(1.1)}
+  body.cap-collapsed .list{padding-bottom:84px}
 
   /* Material 3 style bottom navigation */
   .bnav{order:5;display:flex;background:var(--surface);border-top:1px solid var(--rule);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
@@ -417,7 +428,7 @@ body.resizing *{cursor:col-resize!important}
   .toast{bottom:calc(150px + env(safe-area-inset-bottom));width:max-content;max-width:calc(100vw - 24px)}
   body.typing .toast{bottom:88px}
 }
-@media (prefers-color-scheme: dark){ .primary,.capbtn.task,.capbtn.task:hover:not(:disabled),.weights button.on,.check.done,.cbox.on,.pick.on,.btn-ok{color:#0E1A24} }
+@media (prefers-color-scheme: dark){ .fab,.primary,.capbtn.task,.capbtn.task:hover:not(:disabled),.weights button.on,.check.done,.cbox.on,.pick.on,.btn-ok{color:#0E1A24} }
 @keyframes edIn{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes sheetIn{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
@@ -434,6 +445,7 @@ body.resizing *{cursor:col-resize!important}
 
   <main class="main">
     <section class="capture">
+      <button class="cap-handle" id="capHide" aria-label="Hide the jot box" aria-expanded="true" title="Hide the jot box"><span aria-hidden="true"></span></button>
       <label for="cap" class="sr">New jot</label>
       <div class="cap-box">
         <textarea id="cap" rows="1" placeholder="Type a note or task here. It's saved as you type." autocomplete="off" autocapitalize="sentences" enterkeyhint="send"></textarea>
@@ -480,6 +492,7 @@ body.resizing *{cursor:col-resize!important}
     <div class="stats" id="stats" aria-live="polite"></div>
     <div class="selbar" id="selbar" role="toolbar" aria-label="Selected jots" hidden></div>
     <div class="list" id="list" role="list"></div>
+    <button class="fab" id="capFab" aria-label="New jot" title="New jot" hidden><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     <nav class="bnav" id="bnav" aria-label="Views">
       <button data-view="all"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M4 13h4l1.5 2.5h5L16 13h4M4 13l2.5-7h11L20 13v5H4z"/></svg></span><span class="lbl">All</span></button>
       <button data-view="tasks"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><span class="lbl">Tasks</span></button>
@@ -520,6 +533,14 @@ body.resizing *{cursor:col-resize!important}
       <button class="ghost" id="exportBtn">Export file</button>
       <label class="ghost" style="cursor:pointer">Import file<input type="file" id="importIn" accept=".json,.txt,application/json,text/plain" hidden></label>
     </div>
+
+    <h4>Notifications</h4>
+    <p>Get a note when another device connects and a daily summary of tasks due. On a Mac, keep NotePannuda open (minimized is fine) and alerts arrive as normal notifications. On a phone, they arrive while the app is open or recently used; Android pauses web apps in the background, so a due alert may wait until you next open it.</p>
+    <div id="notifyCard"></div>
+
+    <h4>Jot box on a phone</h4>
+    <div class="seg" id="capSeg" role="group" aria-label="Jot box on a phone"><button data-cap="shown">Always shown</button><button data-cap="hidden">Hidden, tap + to jot</button></div>
+    <p class="faint" style="margin-top:6px">You can also tap or swipe down the small handle above the jot box to hide it.</p>
 
     <h4>Enter key in the jot box</h4>
     <div class="seg" id="enterSeg" role="group" aria-label="What Enter does in the jot box"><button data-enter="auto">Automatic</button><button data-enter="save">Saves the jot</button><button data-enter="newline">Adds a new line</button></div>
@@ -1034,7 +1055,7 @@ const Local = {
   }
 };
 
-let meta = { rulesText: DEFAULT_RULES, rulesUpdatedAt: '', deviceId: '', deviceName: '', clock: 0, pairCode: '', peers: {}, relays: null, relayFallback: true, nostrKey: '', lastExportAt: 0, seeded: false };
+let meta = { notify: null, rulesText: DEFAULT_RULES, rulesUpdatedAt: '', deviceId: '', deviceName: '', clock: 0, pairCode: '', peers: {}, relays: null, relayFallback: true, nostrKey: '', lastExportAt: 0, seeded: false };
 const saveMeta = debounce(() => Local.setMeta(meta), 300);
 const APP_TAG = 'notepannuda';
 // Settings left over from earlier versions (Google Drive, folder sync). Removed on load, including stored sign-in tokens.
@@ -1635,10 +1656,18 @@ const DirectSync = {
   },
   opened(p) {
     const rp = this.relayPeers.get(p.id); if (rp) rp.active = false; // the direct connection takes over
+    const firstPair = this.justPaired === p.id;
     if (!this.announced.has(p.id)) {
       this.announced.add(p.id);
-      if (this.justPaired === p.id) { this.justPaired = null; toast(`Paired with ${deviceLabel(p.id)}. Your devices will now sync.`); }
+      if (firstPair) { this.justPaired = null; toast(`Paired with ${deviceLabel(p.id)}. Your devices will now sync.`); }
       else toast(`Connected to ${deviceLabel(p.id)}`);
+    }
+    if (document.hidden && Notify.prefs().connect) {
+      this.notified = this.notified || new Map();
+      if (firstPair || Date.now() - (this.notified.get(p.id) || 0) > 600000) { // at most once per device every 10 minutes
+        this.notified.set(p.id, Date.now());
+        Notify.show(firstPair ? `Paired with ${deviceLabel(p.id)}` : `${deviceLabel(p.id)} connected`, firstPair ? 'Your devices will now sync.' : 'Your notes are syncing.', { tag: 'connect-' + p.id });
+      }
     }
     p.send({ t: 'hi', name: deviceName(), rules: { text: meta.rulesText, stamp: meta.rulesUpdatedAt }, buckets: bucketHashes() });
     this.refresh();
@@ -1979,6 +2008,78 @@ function refreshEditorAfterSync(texts) {
 }
 
 // ---------- reminders ----------
+// ---------- notifications ----------
+// Shown through the service worker (the only way Android allows), falling back to a plain browser
+// notification. A web app can only notify while it's running: on a Mac keep it open (minimized is fine);
+// on Android it runs while open, plus an optional once-a-day background check where Chrome supports it.
+const Notify = {
+  supported: () => 'Notification' in window,
+  granted: () => 'Notification' in window && Notification.permission === 'granted',
+  prefs: () => Object.assign({ connect: true, due: true, dueTime: '09:00' }, meta.notify || {}),
+  async request() {
+    if (!this.supported()) return 'unsupported';
+    try { return await Notification.requestPermission(); } catch (e) { return Notification.permission; }
+  },
+  async show(title, body, opts = {}) {
+    if (!this.granted()) return false;
+    const o = { body, icon: 'icon-192.png', badge: 'badge-96.png', tag: opts.tag, renotify: !!opts.tag, data: { url: opts.url || './notepannuda.html' } };
+    try {
+      const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+      if (reg && reg.active) { await reg.showNotification(title, o); return true; }
+    } catch (e) { }
+    try { const n = new Notification(title, o); n.onclick = () => { window.focus(); if (opts.onClick) opts.onClick(); n.close(); }; return true; }
+    catch (e) { return false; }
+  }
+};
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+// "Due today" summary, once a day at the chosen time (or the first time the app runs after it).
+// The date it was last shown is kept where the service worker's background check can see it too.
+async function getDueNotified() {
+  if (Local.kind === 'indexeddb') { try { return (await idbTx(Local.db, 'meta', 'readonly', os => os.get('dueNotified'))) || ''; } catch (e) { } }
+  return meta.dueNotified || '';
+}
+async function setDueNotified(d) {
+  if (Local.kind === 'indexeddb') { try { await idbTx(Local.db, 'meta', 'readwrite', os => os.put(d, 'dueNotified')); } catch (e) { } }
+  meta.dueNotified = d; saveMeta();
+}
+function dueSummary() {
+  const td = today(), open = [...S.items.values()].filter(i => !i.deleted && i.type === 'task' && !i.done && i.due);
+  const dueToday = open.filter(i => i.due === td), overdue = open.filter(i => i.due < td);
+  if (!dueToday.length && !overdue.length) return null;
+  const title = dueToday.length ? `${plural(dueToday.length, 'task', 'tasks')} due today${overdue.length ? `, ${overdue.length} overdue` : ''}` : `${plural(overdue.length, 'overdue task', 'overdue tasks')}`;
+  const list = [...dueToday, ...overdue], more = list.length - 3;
+  return { title, body: list.slice(0, 3).map(t => '• ' + (firstLine(t.text) || 'Untitled task')).join('\n') + (more > 0 ? `\n+${more} more` : '') };
+}
+let dueChecking = false;
+async function checkDue() {
+  const pr = Notify.prefs(); if (!pr.due || dueChecking) return;
+  const [h, m] = (pr.dueTime || '09:00').split(':').map(Number), now = new Date();
+  if (now.getHours() * 60 + now.getMinutes() < h * 60 + m) return;
+  dueChecking = true;
+  try {
+    const td = today();
+    if (await getDueNotified() === td) return;
+    const sum = dueSummary();
+    if (!sum) { await setDueNotified(td); return; }
+    if (document.hidden) { if (!await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when the app is next open
+    else toast(sum.title, 'Show', () => { state.view = 'today'; scheduleRender(); });
+    await setDueNotified(td);
+  } finally { dueChecking = false; }
+}
+// Optional background check (Chrome, installed app): lets the service worker post the due summary while the app is closed.
+async function registerDueCheck() {
+  try {
+    if (!('serviceWorker' in navigator)) return 'unsupported';
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || !('periodicSync' in reg)) return 'unsupported';
+    const st = await navigator.permissions.query({ name: 'periodic-background-sync' }).catch(() => ({ state: 'denied' }));
+    if (st.state !== 'granted') return 'not allowed';
+    if (Notify.prefs().due && Notify.granted()) { await reg.periodicSync.register('notepannuda-due', { minInterval: 6 * 3600 * 1000 }); return 'on'; }
+    await reg.periodicSync.unregister('notepannuda-due'); return 'off';
+  } catch (e) { return 'unsupported'; }
+}
+
 function checkReminders() {
   const now = Date.now();
   for (const it of S.items.values()) {
@@ -1987,17 +2088,18 @@ function checkReminders() {
       it.reminded = true; touch(it, { silent: true });
       const title = firstLine(it.text) || 'Untitled task';
       toast('Reminder: ' + title, 'Open', () => select(it.id));
-      try { if ('Notification' in window && Notification.permission === 'granted') new Notification('NotePannuda reminder', { body: title }); } catch (e) { }
+      if (document.hidden) Notify.show('Reminder', title, { tag: 'reminder-' + it.id });
     }
   }
+  checkDue();
 }
 function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => { }); } catch (e) { } }
 
 // ---------- UI state + rendering ----------
 const state = { view: 'all', q: '', tags: new Set(), prios: new Set(), due: '', sortT: { key: 'smart', dir: -1, then: 'due', thenDir: 1 }, sortN: { key: 'updated', dir: -1 }, group: 'urgency', status: 'all', collapsed: new Set(['completed']), sel: null, limit: 200, results: [] };
 const VIEWS = [['all', 'Everything'], ['notes', 'Notes'], ['tasks', 'Open tasks'], ['today', 'Today'], ['upcoming', 'Next 7 days'], ['overdue', 'Overdue'], ['done', 'Completed']];
-Object.assign(state, { capH: 96, weights: new Set(), selMode: false, picked: new Set(), allIds: [], lastPick: null, delArmed: false, sideW: 232, edW: 400 });
-const saveUI = () => { meta.ui = { status: state.status, collapsed: [...state.collapsed], sortT: state.sortT, sortN: state.sortN, group: state.group, sideW: state.sideW, edW: state.edW, capH: state.capH }; saveMeta(); };
+Object.assign(state, { capHidden: false, capTemp: false, capH: 96, weights: new Set(), selMode: false, picked: new Set(), allIds: [], lastPick: null, delArmed: false, sideW: 232, edW: 400 });
+const saveUI = () => { meta.ui = { capHidden: state.capHidden, status: state.status, collapsed: [...state.collapsed], sortT: state.sortT, sortN: state.sortN, group: state.group, sideW: state.sideW, edW: state.edW, capH: state.capH }; saveMeta(); };
 
 // ---------- selecting several jots ----------
 function enterSelect(firstId) {
@@ -2445,7 +2547,7 @@ function renderList() {
   const confBtn = nConf && !Q.is.has('conflict') ? `<button class="linkbtn conflict-link" data-conflicts>${nConf} ${nConf === 1 ? 'jot was' : 'jots were'} edited on two devices. Review</button>` : '';
   const nudge = Q.terms.length && !Q.sort && state.sortT.key !== 'relevance' ? '<button class="linkbtn" data-preset="match">Sort by best match</button>' : '';
   renderSelbar();
-  $('#stats').innerHTML = `<span>${res.length.toLocaleString()} ${res.length === 1 ? 'item' : 'items'}</span>${!state.selMode && res.length ? '<button class="linkbtn" data-select>Select</button>' : ''}<span class="st-time">searched ${total.toLocaleString()} in ${ms < 1 ? ms.toFixed(2) : ms.toFixed(1)} ms</span><button class="linkbtn subtle st-sort" data-opensort>${esc(sortSummary(Q))}</button>${confBtn}${nudge}${chips}${anyFilter ? '<button class="linkbtn" data-clear>Clear filters</button>' : ''}`;
+  $('#stats').innerHTML = `<span>${res.length.toLocaleString()} ${res.length === 1 ? 'item' : 'items'}</span>${!state.selMode && res.length ? '<button class="mini" data-select>Select</button>' : ''}<span class="st-time">searched ${total.toLocaleString()} in ${ms < 1 ? ms.toFixed(2) : ms.toFixed(1)} ms</span><button class="linkbtn subtle st-sort" data-opensort>${esc(sortSummary(Q))}</button>${confBtn}${nudge}${chips}${anyFilter ? '<button class="mini" data-clear>Clear filters</button>' : ''}`;
   document.querySelectorAll('#statusSeg button').forEach(b => { const on = state.status === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   document.querySelectorAll('#weightSeg button').forEach(b => { const on = state.weights.has(+b.dataset.w); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   document.querySelectorAll('#prioSeg button').forEach(b => { const on = state.prios.has(+b.dataset.p); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
@@ -2654,6 +2756,31 @@ function toggleChecklistLine() {
   const caret = ls + next.length; ta.focus(); ta.setSelectionRange(caret, caret);
   onCaptureInput();
 }
+// Phone only: the jot box can be tucked away so the list gets the whole screen. While hidden, a + button
+// opens it for one jot; saving (or Back, or tapping away with nothing typed) tucks it away again.
+function applyCapVisibility() {
+  const hidden = isPhone() && state.capHidden && !state.capTemp;
+  document.body.classList.toggle('cap-collapsed', hidden);
+  const h = $('#capHide'); if (h) h.setAttribute('aria-expanded', String(!hidden));
+  const f = $('#capFab'); if (f) f.hidden = !hidden;
+}
+function hideCap(fromUser) {
+  const wasTemp = state.capTemp;
+  state.capTemp = false;
+  if (!state.capHidden) {
+    state.capHidden = true; saveUI();
+    if (fromUser) toast('Jot box hidden. Tap + to jot.', 'Keep shown', () => { state.capHidden = false; saveUI(); applyCapVisibility(); });
+  }
+  const cap = $('#cap'); if (cap && document.activeElement === cap) cap.blur();
+  applyCapVisibility();
+  if (wasTemp) Back.close('composer');
+}
+function openCapTemp() {
+  state.capTemp = true; applyCapVisibility();
+  Back.push('composer', () => { if (state.capTemp) { state.capTemp = false; const c = $('#cap'); if (c) c.blur(); applyCapVisibility(); } });
+  requestAnimationFrame(() => $('#cap').focus());
+}
+function finishCapTemp() { if (state.capTemp && !$('#cap').value.trim()) hideCap(false); }
 function updateCapButtons() {
   const empty = !$('#cap').value.trim();
   for (const id of ['capNote', 'capTaskBtn']) { const b = $('#' + id); if (b) b.disabled = empty; }
@@ -2685,6 +2812,7 @@ function commitCapture(mode) { // mode: 'note' or 'task' (buttons, ⌘+Enter), o
   const want = mode === true || mode === 'task' ? 'task' : mode === 'note' ? 'note' : null;
   if (want && it.type !== want) { it.type = want; touch(it); }
   capId = null; cap.value = ''; autoGrow(cap); renderParse(null); setCapTask(false); updateCapButtons(); buzz(8);
+  if (state.capTemp) setTimeout(finishCapTemp, 0); // opened with +: tuck it away again after saving
   toast(`Saved as ${it.type}`, 'Open', () => select(it.id));
 }
 
@@ -2788,6 +2916,41 @@ function bindUI() {
   // phone jot box: Task toggle and Save keep the keyboard open for rapid jotting
   ['capNote', 'capTaskBtn', 'capList'].forEach(id => $('#' + id).addEventListener('pointerdown', e => e.preventDefault()));
   $('#capList').addEventListener('click', toggleChecklistLine);
+  $('#notifyCard').addEventListener('click', async e => {
+    const b = e.target.closest('[data-notify]'); if (!b) return;
+    if (b.dataset.notify === 'enable') {
+      const r = await Notify.request();
+      if (r === 'granted') { await Notify.show('Notifications are on', 'NotePannuda will tell you about due tasks and connected devices.', { tag: 'welcome' }); checkDue(); }
+    }
+    if (b.dataset.notify === 'test') { const ok = await Notify.show('NotePannuda', 'Notifications are working.', { tag: 'test' }); if (!ok) toast('This browser didn’t show the notification.'); }
+    renderNotifySettings();
+  });
+  $('#notifyCard').addEventListener('change', async e => {
+    const pr = Notify.prefs();
+    if (e.target.id === 'nConnect') pr.connect = e.target.checked;
+    if (e.target.id === 'nDue') pr.due = e.target.checked;
+    if (e.target.id === 'nDueTime' && /^\d{2}:\d{2}$/.test(e.target.value)) { pr.dueTime = e.target.value; await setDueNotified(''); }
+    meta.notify = pr; await Local.setMeta(meta); // saved now, so the background check sees it
+    await registerDueCheck(); checkDue();
+  });
+  // Tapping a notification brings the app forward (the service worker passes along which view to open).
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'open') { try { const v = new URL(e.data.url).searchParams.get('view'); if (v && VIEWS.some(x => x[0] === v)) { state.view = v; scheduleRender(); } } catch (err) { } }
+  });
+  const handle = $('#capHide');
+  let hy = null;
+  handle.addEventListener('pointerdown', e => { hy = e.clientY; });
+  handle.addEventListener('pointermove', e => { if (hy !== null && e.clientY - hy > 24) { hy = null; hideCap(true); } });
+  handle.addEventListener('pointerup', () => { hy = null; });
+  handle.addEventListener('click', () => hideCap(true));
+  $('#capFab').addEventListener('click', openCapTemp);
+  $('#cap').addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== $('#cap')) finishCapTemp(); }, 150));
+  PHONE_MQ.addEventListener && PHONE_MQ.addEventListener('change', applyCapVisibility);
+  applyCapVisibility();
+  $('#capSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-cap]'); if (!b) return;
+    state.capHidden = b.dataset.cap === 'hidden'; state.capTemp = false; saveUI(); applyCapVisibility(); renderEnterSeg();
+  });
   $('#enterSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-enter]'); if (!b) return;
     meta.enterMode = b.dataset.enter === 'auto' ? '' : b.dataset.enter; saveMeta(); applyEnterMode(); renderEnterSeg();
@@ -3055,14 +3218,28 @@ function bindUI() {
   });
 
   // persistence lifecycle hooks
-  document.addEventListener('visibilitychange', () => { if (document.hidden) Local.flush(); else DirectSync.wake(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) Local.flush(); else { DirectSync.wake(); checkDue(); } });
   window.addEventListener('pagehide', () => Local.flush());
   window.addEventListener('online', () => { DirectSync.wake(); DirectSync.refresh(); });
   window.addEventListener('hashchange', handleLaunchParams); // a pairing link opened while the app is already running
   window.addEventListener('offline', () => DirectSync.refresh());
 }
 
+async function renderNotifySettings() {
+  const el = $('#notifyCard'); if (!el) return;
+  const pr = Notify.prefs();
+  if (!Notify.supported()) { el.innerHTML = '<p>This browser can’t show notifications.</p>'; return; }
+  const perm = Notification.permission;
+  if (perm === 'default') { el.innerHTML = `<div class="actions"><button class="primary" data-notify="enable">Turn on notifications</button></div>`; return; }
+  if (perm === 'denied') { el.innerHTML = '<p class="warn-text">Notifications are blocked for NotePannuda. Allow them in your browser’s site settings (in Chrome: the icon left of the address, then Notifications), then come back here.</p>'; return; }
+  const bg = await registerDueCheck();
+  el.innerHTML = `<label class="check-row"><input type="checkbox" id="nConnect" ${pr.connect ? 'checked' : ''}> When another device connects (while NotePannuda is in the background)</label>
+    <label class="check-row"><input type="checkbox" id="nDue" ${pr.due ? 'checked' : ''}> Tasks due today, at <input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in"></label>
+    <p class="faint">Task reminders you set on a task always notify. ${bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
+    <div class="actions"><button class="mini" data-notify="test">Send a test notification</button></div>`;
+}
 function renderEnterSeg() {
+  document.querySelectorAll('#capSeg [data-cap]').forEach(b => { const on = (b.dataset.cap === 'hidden') === state.capHidden; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   const cur = meta.enterMode || 'auto';
   document.querySelectorAll('#enterSeg [data-enter]').forEach(b => { const on = b.dataset.enter === cur; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   $('#enterNote').textContent = cur === 'auto' ? `On this device, Enter currently ${enterSaves() ? 'saves the jot' : 'adds a new line'}.` : '';
@@ -3070,7 +3247,7 @@ function renderEnterSeg() {
 function openSettings() {
   $('#rulesTa').value = meta.rulesText;
   $('#deviceName').value = deviceName();
-  renderEnterSeg();
+  renderEnterSeg(); renderNotifySettings();
   state.showPair = state.showPair && DirectSync.hasCode(); state.unpairArmed = false; state.removeArmed = null;
   renderSyncSettings();
   $('#settings').classList.add('open');
@@ -3156,6 +3333,7 @@ async function init() {
     if (meta.ui.sideW) state.sideW = meta.ui.sideW;
     if (meta.ui.edW) state.edW = meta.ui.edW;
     if (meta.ui.capH) state.capH = meta.ui.capH;
+    state.capHidden = !!meta.ui.capHidden;
   }
   const shards = await Local.loadShards();
   for (const sh of shards) for (const it of (sh.items || [])) {

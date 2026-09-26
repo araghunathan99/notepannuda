@@ -17,6 +17,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
 - **Select to complete or delete in bulk:** choose **Select** above the list, ⌘/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**) or **Delete**, and Undo if you change your mind.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
+- **Notifications:** when another device connects, a daily summary of tasks due (at a time you choose), and task reminders. Turn them on in Settings. On a Mac keep the app open (minimized is fine); on Android they arrive while the app is open or recently used, plus an optional background check in Chrome.
 - **Phone-friendly:** swipe to complete or delete, Android back-gesture support, and a share target (share text or files into NotePannuda). Works offline.
 
 ## Files
@@ -29,6 +30,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 | `favicon.ico`, `favicon.svg`, `favicon-16.png`, `favicon-32.png` | Browser tab icons |
 | `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | Home-screen and app icons |
 | `logo-96.png`, `logo-512.png` | Logo (sidebar badge, README) |
+| `badge-96.png` | Small monochrome icon for Android's notification bar |
 | `shortcut-*.png` | Long-press shortcut icons |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 | `publish.sh` | Publishes or updates the site from your Mac |
