@@ -68,6 +68,7 @@ button{cursor:pointer}
 .cap-foot{display:flex;align-items:center;gap:10px;padding:4px 10px 10px 16px;flex-wrap:wrap;cursor:default}
 .cap-foot .parse{flex:1;margin:0;min-width:200px}
 .cap-actions{display:flex;gap:8px;margin-left:auto}
+.capbtn.clbtn{color:var(--graphite)}
 .capbtn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;border:1px solid var(--rule-strong);background:var(--surface);color:var(--ink);white-space:nowrap}
 .capbtn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 .capbtn.task{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -364,6 +365,8 @@ body.resizing *{cursor:col-resize!important}
   .capbtn{height:48px;padding:0 14px;border-radius:24px;font-size:14px}
   .capbtn svg,.capbtn .lbl-long{display:none}
   .capbtn .lbl-short{display:inline}
+  .capbtn.clbtn{width:48px;padding:0;justify-content:center}
+  .capbtn.clbtn svg{display:inline}
   .grip-h{display:none}
 
   /* Material 3 style bottom navigation */
@@ -439,6 +442,7 @@ body.resizing *{cursor:col-resize!important}
         <div class="cap-foot">
           <div class="parse" id="parse"></div>
           <div class="cap-actions">
+            <button class="capbtn clbtn" id="capList" title="Make this line a checklist item (tap again to undo)" aria-label="Checklist item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="6" rx="1.5"/><path d="m4.8 7.6 1.3 1.3 2.3-2.6"/><rect x="3.5" y="13.5" width="6" height="6" rx="1.5"/><path d="M13 7.5h7.5M13 16.5h7.5"/></svg><span class="lbl-long">Checklist</span></button>
             <button class="capbtn note" id="capNote" disabled title="Save this jot as a note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4"/></svg><span class="lbl-long">Save note</span><span class="lbl-short">Note</span></button>
             <button class="capbtn task" id="capTaskBtn" disabled title="Save this jot as a task (⌘+Enter)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span class="lbl-long">Save as task</span><span class="lbl-short">Task</span></button>
           </div>
@@ -519,6 +523,11 @@ body.resizing *{cursor:col-resize!important}
       <label class="ghost" style="cursor:pointer">Import file<input type="file" id="importIn" accept=".json,.txt,application/json,text/plain" hidden></label>
     </div>
 
+    <h4>Enter key in the jot box</h4>
+    <div class="seg" id="enterSeg" role="group" aria-label="What Enter does in the jot box"><button data-enter="auto">Automatic</button><button data-enter="save">Saves the jot</button><button data-enter="newline">Adds a new line</button></div>
+    <p class="faint" id="enterNote" style="margin-top:6px"></p>
+    <p>Automatic: on a phone or tablet, Enter adds a new line and the <strong>Note</strong> / <strong>Task</strong> buttons save; with a keyboard, Enter saves and Shift+Enter adds a new line. ⌘+Enter always saves as a task.</p>
+
     <h4>Auto-tag rules</h4>
     <p>One rule per line: <code>tag: keyword, keyword, keyword</code>. A jot containing any keyword gets the tag. Keywords match the start of words, so <code>invoic</code> catches invoice and invoicing.</p>
     <textarea id="rulesTa" spellcheck="false"></textarea>
@@ -533,7 +542,7 @@ body.resizing *{cursor:col-resize!important}
     <h4>Shortcuts and quick syntax</h4>
     <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">⌘</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">⌘</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">⌘</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
     <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>–<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>–<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
-    <p>Checklists: start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
+    <p>Checklists: tap the checklist button in the jot box, or start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
     <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> or several at once like <code>p:high,med</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
   </div>
 </div>
@@ -2494,7 +2503,9 @@ function renderSync() {
 }
 
 function renderParse(it) {
-  const hint = '<span class="hint"><span><span class="kbd">Enter</span> save</span><span><span class="kbd">⌘</span> <span class="kbd">Enter</span> save as task</span><span><span class="kbd">Shift</span> <span class="kbd">Enter</span> new line</span></span>';
+  const hint = enterSaves()
+    ? '<span class="hint"><span><span class="kbd">Enter</span> save</span><span><span class="kbd">⌘</span> <span class="kbd">Enter</span> save as task</span><span><span class="kbd">Shift</span> <span class="kbd">Enter</span> new line</span></span>'
+    : '<span class="hint"><span><span class="kbd">Enter</span> new line</span><span><span class="kbd">⌘</span> <span class="kbd">Enter</span> save as task</span></span>';
   const el = $('#parse');
   el.classList.toggle('idle', !it);
   if (!it) { el.innerHTML = `<span>Try <code>Call Sam about the invoice !h due:fri #acme</code> or start a line with <code>[]</code> for a checklist</span>${hint}`; return; }
@@ -2623,6 +2634,28 @@ function autoGrow(el) {
   const max = isPhone() ? window.innerHeight * 0.3 : Math.max(280, state.capH + 180);
   el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight + 2, max) + 'px';
 }
+// Touch screens have no Shift+Enter, so there Enter adds a new line and the Note / Task buttons save.
+const TOUCH_MQ = matchMedia('(hover: none) and (pointer: coarse)');
+function enterSaves() {
+  if (meta.enterMode === 'save') return true;
+  if (meta.enterMode === 'newline') return false;
+  return !TOUCH_MQ.matches;
+}
+function applyEnterMode() {
+  const cap = $('#cap'); if (!cap) return;
+  cap.setAttribute('enterkeyhint', enterSaves() ? 'send' : 'enter'); // the keyboard's Enter key shows "send" or a return arrow
+  if (!capId) renderParse(null);
+}
+// Checklist button: turn the current line into a checklist item, or back into plain text.
+function toggleChecklistLine() {
+  const ta = $('#cap'), v = ta.value, pos = ta.selectionStart;
+  const ls = v.lastIndexOf('\n', pos - 1) + 1; let le = v.indexOf('\n', pos); if (le < 0) le = v.length;
+  const line = v.slice(ls, le), m = line.match(/^(\s*)(?:[-*]\s+)?\[( |x|X)?\]\s?/);
+  const next = m ? m[1] + line.slice(m[0].length) : '[ ] ' + line;
+  ta.value = v.slice(0, ls) + next + v.slice(le);
+  const caret = ls + next.length; ta.focus(); ta.setSelectionRange(caret, caret);
+  onCaptureInput();
+}
 function updateCapButtons() {
   const empty = !$('#cap').value.trim();
   for (const id of ['capNote', 'capTaskBtn']) { const b = $('#' + id); if (b) b.disabled = empty; }
@@ -2721,6 +2754,11 @@ function bindUI() {
   const cap = $('#cap'), q = $('#q');
   cap.addEventListener('input', onCaptureInput);
   cap.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.isComposing && !e.metaKey && !e.ctrlKey && !enterSaves()) {
+      // new-line mode: Enter adds a line; on a checklist line it starts the next item (or ends an empty one)
+      if (!e.shiftKey && listEnter(cap, false)) { e.preventDefault(); onCaptureInput(); }
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
       e.preventDefault();
       if (!e.metaKey && !e.ctrlKey) {
@@ -2750,7 +2788,14 @@ function bindUI() {
     if (b.dataset.view) { state.view = b.dataset.view; state.limit = 200; $('#list').scrollTop = 0; scheduleRender(); }
   });
   // phone jot box: Task toggle and Save keep the keyboard open for rapid jotting
-  ['capNote', 'capTaskBtn'].forEach(id => $('#' + id).addEventListener('pointerdown', e => e.preventDefault()));
+  ['capNote', 'capTaskBtn', 'capList'].forEach(id => $('#' + id).addEventListener('pointerdown', e => e.preventDefault()));
+  $('#capList').addEventListener('click', toggleChecklistLine);
+  $('#enterSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-enter]'); if (!b) return;
+    meta.enterMode = b.dataset.enter === 'auto' ? '' : b.dataset.enter; saveMeta(); applyEnterMode(); renderEnterSeg();
+  });
+  TOUCH_MQ.addEventListener && TOUCH_MQ.addEventListener('change', applyEnterMode);
+  applyEnterMode();
   $('#capNote').addEventListener('click', () => { commitCapture('note'); $('#cap').focus(); });
   $('#capTaskBtn').addEventListener('click', () => { commitCapture('task'); $('#cap').focus(); });
   updateCapButtons();
@@ -3019,9 +3064,15 @@ function bindUI() {
   window.addEventListener('offline', () => DirectSync.refresh());
 }
 
+function renderEnterSeg() {
+  const cur = meta.enterMode || 'auto';
+  document.querySelectorAll('#enterSeg [data-enter]').forEach(b => { const on = b.dataset.enter === cur; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  $('#enterNote').textContent = cur === 'auto' ? `On this device, Enter currently ${enterSaves() ? 'saves the jot' : 'adds a new line'}.` : '';
+}
 function openSettings() {
   $('#rulesTa').value = meta.rulesText;
   $('#deviceName').value = deviceName();
+  renderEnterSeg();
   state.showPair = state.showPair && DirectSync.hasCode(); state.unpairArmed = false; state.removeArmed = null;
   renderSyncSettings();
   $('#settings').classList.add('open');
