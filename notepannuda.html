@@ -268,7 +268,22 @@ body.resizing *{cursor:col-resize!important}
 .selbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 28px;background:var(--accent-soft);border-bottom:1px solid var(--rule);font-size:13px}
 .selbar[hidden]{display:none}
 .selbar label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
-.selbar input{width:18px;height:18px;margin:0}
+.selbar input[type=checkbox]{width:18px;height:18px;margin:0}
+.selhead{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0}
+.selacts{display:flex;gap:8px;flex-wrap:wrap}
+.selbtn{border:1px solid var(--rule-strong);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.selbtn:hover:not(:disabled){border-color:var(--accent)}
+.selbtn:disabled{opacity:.45;cursor:default}
+.selbtn.ok{color:var(--ok)}
+.selbtn.danger{color:var(--high)}
+.selbtn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.selbtn.armed{background:var(--high);border-color:var(--high);color:#fff}
+.selbtn .sh{display:none}
+.tagpanel{flex-basis:100%;display:flex;flex-direction:column;gap:8px;padding:8px 0 2px;border-top:1px solid var(--rule)}
+.tp-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tp-note{margin:0}
+.tp-lab{font-weight:600;color:var(--graphite);min-width:56px}
+#selTagIn{flex:1 1 180px;min-width:0;max-width:340px;border:1px solid var(--rule-strong);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:14px}
 .selbar .grow{flex:1;color:var(--graphite)}
 .ed-foot-acts{display:flex;gap:8px}
 body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2px dashed var(--accent);border-radius:14px;background:color-mix(in srgb,var(--accent-soft) 70%,transparent);display:grid;place-items:center;font-size:18px;font-weight:600;color:var(--accent);z-index:999;pointer-events:none}
@@ -348,7 +363,14 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
   .grip{display:none!important}
   .item{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .selbar{order:2;padding:8px 14px}
-  .selbar .btn-danger,.selbar .btn-ok,.selbar .ghost{min-height:40px}
+  .selhead{flex-basis:100%}
+  .selacts{flex-basis:100%;flex-wrap:nowrap;gap:6px}
+  .selacts .selbtn{flex:1 1 auto;min-width:0}
+  .selbtn{min-height:40px;padding:0 8px;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .selbtn .lg{display:none}
+  .selbtn .sh{display:inline}
+  #selTagIn{max-width:none;min-height:40px;font-size:16px}
+  .tagpanel .selbtn{padding:0 16px}
   .filters .seg-lab{padding:0 10px;font-size:13px}
   .pick{width:24px;height:24px;position:relative;margin:1px 0 0 4px}
   .pick::after{content:'';position:absolute;inset:-12px}
@@ -573,12 +595,12 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
       <button class="ghost danger" id="wipeBtn">Delete everything</button>
       <button class="ghost danger" id="resetBtn">Reset this device</button>
     </div>
-    <p class="faint"><strong>Share with someone:</strong> select jots (search or filter first to narrow them down), then choose <strong>Share&#x2026;</strong>, or use <strong>Share&#x2026;</strong> in an open jot. They get a file to import into their own NotePannuda: on Android, share the file to NotePannuda; on a computer, drop it onto the window or use <strong>Import file</strong>. Only those jots go, without reminders, and your devices stay unpaired. Sharing an updated version later updates their copy.</p>
+    <p class="faint"><strong>Share with someone:</strong> select jots (search or filter first to narrow them down), then choose <strong>Share&#x2026;</strong> to send them with the share sheet or download them as a file (an open jot has <strong>Share&#x2026;</strong> and <strong>Download</strong> too). They get a file to import into their own NotePannuda: on Android, share the file to NotePannuda; on a computer, drop it onto the window or use <strong>Import file</strong>. Only those jots go, without reminders, and your devices stay unpaired. Sharing an updated version later updates their copy.</p>
     <p class="faint"><strong>Export file</strong> saves your notes as a backup (deleted jots are left out). Importing a backup restores what's in it: jots deleted forever come back, and jots still in Recently deleted stay there until you restore them (the import offers to). <strong>Send changes</strong> is sync by file: it also carries deletions, so importing it on another device removes what you deleted here.</p>
     <p class="faint"><strong>Delete everything</strong> deletes your jots on this device and on all paired devices (you can undo it, or restore from Recently deleted). <strong>Reset this device</strong> unpairs this device and erases NotePannuda from it only; your other devices keep everything, and pairing again copies it all back.</p>
 
     <h4>Shortcuts and quick syntax</h4>
-    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <strong>Clear tags</strong> in the selection bar removes one tag or all tags from the selected jots, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
+    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <strong>Manage tags</strong> in the selection bar adds tags to the selected jots, or removes one tag or all of them, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
     <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>&#x2013;<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>&#x2013;<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
     <p>Checklists: tap the checklist button in the jot box, or start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
     <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> or several at once like <code>p:high,med</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
@@ -792,7 +814,7 @@ const ser = it => { const { autoTags, ...rest } = it; return rest; };
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: { deleted: (it.v && it.v.deleted) || '' }, tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: { deleted: (it.v && it.v.deleted) || '' } } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-27.5';
+const APP_VERSION = '2026-09-27.8';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -1999,28 +2021,30 @@ function downloadText(text, name) {
   a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
-// Hands a JSON file to the system share sheet (Android, and Mac where the browser supports it), or saves it
-// to downloads if the browser can't share files. Returns 'shared', 'cancelled', 'failed' or 'downloaded'.
-// Call it straight from a tap or click: browsers only open the share sheet in response to one.
-async function shareJSON(json, base, title, text) {
-  // Android's share sheet accepts only some file types; if .json isn't allowed, the same JSON goes as .json.txt.
-  const files = [new File([json], base + '.json', { type: 'application/json' }), new File([json], base + '.json.txt', { type: 'text/plain' })];
-  if (navigator.share && navigator.canShare) {
-    for (const f of files) {
-      let ok = false; try { ok = navigator.canShare({ files: [f] }); } catch (e) { }
-      if (!ok) continue;
-      try { await navigator.share({ files: [f], title, text }); return 'shared'; }
-      catch (e) { return e.name === 'AbortError' ? 'cancelled' : 'failed'; }
-    }
-  }
-  downloadText(json, base + '.json');
-  return 'downloaded';
+// ---------- the share sheet ----------
+// One way, used everywhere: a single plain-text file (.txt, type text/plain) with the JSON inside.
+//   * Why not .json: Chrome and Edge (Android, Mac, Windows) only share files from a fixed list of types, and
+//     JSON isn't on it. Worse, their canShare() can still say yes to it, so the share sheet then fails with
+//     NotAllowedError. Plain text is on every browser's list, so it's the one type that always goes through.
+//   * The content is the same JSON either way; Import reads the contents, not the file name, so .txt and
+//     .json files both import. The first line of the file says what it is and how to import it.
+//   * Just the file, no extra message: some share targets reject a file that comes with text attached.
+//   * Browsers only open the share sheet straight from a tap, so nothing slow happens before it opens.
+// Downloads don't have these limits, so a downloaded file is a normal .json.
+const canShareFiles = (() => { try { return !!(navigator.share && navigator.canShare && navigator.canShare({ files: [new File(['{}'], 'test.txt', { type: 'text/plain' })] })); } catch (e) { return false; } })();
+async function openShareSheet(json, base, title) { // resolves to 'shared', 'cancelled', 'unsupported', or an error name
+  if (!canShareFiles) return 'unsupported';
+  const file = new File([json], base + '.txt', { type: 'text/plain' });
+  try { await navigator.share({ files: [file], title }); return 'shared'; }
+  catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; console.warn('Share sheet failed', e); return (e && e.name) || 'Error'; }
 }
 async function sendChanges() {
-  const r = await shareJSON(JSON.stringify(buildExport()), exportName('json').replace(/\.json$/, ''), 'NotePannuda changes', 'Import this file in NotePannuda on your other device.');
-  if (r === 'shared') { meta.lastExportAt = Date.now(); saveMeta(); }
-  if (r === 'failed') toast('Sharing didn\u2019t work. Use Export file instead.');
-  if (r === 'downloaded') toast('This browser can\u2019t share files, so the file was saved to your downloads instead.');
+  const json = JSON.stringify(buildExport()), base = exportName('json').replace(/\.json$/, '');
+  const r = await openShareSheet(json, base, 'NotePannuda changes');
+  if (r === 'shared') { meta.lastExportAt = Date.now(); saveMeta(); return; }
+  if (r === 'cancelled') return;
+  if (r === 'unsupported') { downloadText(json, base + '.json'); toast('This browser can\u2019t open a share sheet with a file, so it was saved to your downloads instead.'); return; }
+  toast(`The share sheet didn\u2019t open (${r}).`, 'Download instead', () => downloadText(json, base + '.json'), 12000);
 }
 
 // ---------- inviting someone to the app ----------
@@ -2065,17 +2089,28 @@ function shareRecord(it) {
   return x;
 }
 const buildShare = items => ({ app: APP_TAG, kind: 'notepannuda-share', schema: 2, sharedAt: new Date().toISOString(), items: items.map(shareRecord) });
-async function shareItems(items, done) {
+// Pretty-printed with a note first, so someone who opens the file sees what it is instead of a wall of JSON.
+function shareFile(items) {
   items = items.filter(it => it && !it.deleted && !it.stub);
-  if (!items.length) return;
   const n = items.length, what = plural(n, 'jot', 'jots');
-  const first = splitText(items[0].text).title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
-  const base = `notepannuda-share-${n === 1 && first ? first : n + '-jots'}-${ymd(new Date())}`;
-  const r = await shareJSON(JSON.stringify(buildShare(items)), base, n === 1 ? splitText(items[0].text).title || 'A jot from NotePannuda' : `${what} from NotePannuda`,
-    `${n === 1 ? 'A jot' : what} from NotePannuda. To add ${n === 1 ? 'it' : 'them'}: share this file to NotePannuda on Android, or drop it onto the NotePannuda window (or use Settings, Import file) on a computer.`);
-  if (r === 'shared') { toast(`Shared ${what}.`); if (done) done(); }
-  if (r === 'failed') toast('Sharing didn\u2019t work. Try again, or pick another app to share with.');
-  if (r === 'downloaded') { toast(`Saved ${what} as a file in your downloads. Attach it to an email or message to share it.`, '', null, 8000); if (done) done(); }
+  const first = n ? splitText(items[0].text).title : '';
+  const slug = first.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+  const data = { readMe: `${n === 1 ? 'A jot' : what} shared from NotePannuda. To add ${n === 1 ? 'it' : 'them'}: on Android, share this file to NotePannuda; on a computer, drop it onto the NotePannuda window or use Settings, Import file.`, ...buildShare(items) };
+  return { items, n, what, json: JSON.stringify(data, null, 1), base: `notepannuda-share-${n === 1 && slug ? slug : n + '-jots'}-${ymd(new Date())}`, title: n === 1 ? first || 'A jot from NotePannuda' : `${what} from NotePannuda` };
+}
+async function shareItems(items, done) {
+  const f = shareFile(items); if (!f.n) return;
+  const r = await openShareSheet(f.json, f.base, f.title);
+  if (r === 'shared') { toast(`Shared ${f.what}.`); if (done) done(); return; }
+  if (r === 'cancelled') return;
+  if (r === 'unsupported') return downloadItems(items, done, 'This browser can\u2019t open a share sheet with a file, so ');
+  toast(`The share sheet didn\u2019t open (${r}).`, 'Download instead', () => downloadItems(items, done), 12000);
+}
+function downloadItems(items, done, lead = '') {
+  const f = shareFile(items); if (!f.n) return;
+  downloadText(f.json, f.base + '.json');
+  toast(`${lead}${lead ? 'the' : 'The'} file with ${f.what} is in your downloads. Attach it to an email or message, or keep it as a backup.`, '', null, 8000);
+  if (done) done();
 }
 function exportFile() {
   const data = buildExport(); data.items = data.items.filter(i => !i.deleted); data.backup = true;
@@ -2254,11 +2289,11 @@ const saveUI = () => { meta.ui = { capHidden: state.capHidden, status: state.sta
 
 // ---------- selecting several jots ----------
 function enterSelect(firstId) {
-  state.selMode = true; state.picked = new Set(firstId ? [firstId] : []); state.lastPick = firstId || null; state.delArmed = false; state.tagMenu = false;
+  state.selMode = true; state.picked = new Set(firstId ? [firstId] : []); state.lastPick = firstId || null; state.delArmed = false; state.tagMenu = false; state.shareMenu = false;
   if (isPhone() && state.sel) closeEditor();
   scheduleRender();
 }
-function exitSelect() { state.selMode = false; state.picked = new Set(); state.delArmed = false; state.tagMenu = false; scheduleRender(); }
+function exitSelect() { state.selMode = false; state.picked = new Set(); state.delArmed = false; state.tagMenu = false; state.shareMenu = false; scheduleRender(); }
 function togglePick(id, range) {
   const order = state.results;
   if (range && state.lastPick && order.includes(state.lastPick) && order.includes(id)) {
@@ -2391,41 +2426,93 @@ function clearTags(items, tag) { // tag: one tag name, or null to clear every ta
     before.push([it, it.text, it.tags, it.mutedAuto || []]);
     it.text = text; it.tags = tags; it.mutedAuto = muted; touch(it, { silent: true });
   }
-  state.tagMenu = false;
-  if (!before.length) { toast(tag ? `None of the selected jots have #${tag}.` : 'The selected jots have no tags.'); scheduleRender(); return; }
+  if (!before.length) { toast(tag ? `None of the selected jots have #${tag}.` : 'The selected jots have no tags.'); return; }
+  afterTagChange(before, `${tag ? `Removed #${tag} from` : 'Cleared tags on'} ${plural(before.length, 'jot', 'jots')}`);
+}
+// Tags typed into the add field: "#work, client  q4" gives work, client and q4. Same characters as a #tag in text.
+function parseTagInput(s) {
+  const all = (s || '').split(/[\s,]+/).map(t => t.replace(/^#+/, '').toLowerCase()).filter(Boolean);
+  const ok = all.filter(t => /^[\p{L}\p{N}_\-\/]+$/u.test(t));
+  return { tags: [...new Set(ok)], bad: all.filter(t => !ok.includes(t)) };
+}
+// Adding works like the + in the editor: the tag goes on the jot's tag list, and if you had switched that
+// auto-tag off on a jot, adding it switches it back on. Jots that already show the tag are left as they are.
+function addTags(items, tags) {
+  const before = [];
+  for (const it of items) {
+    if (!it || it.deleted) continue;
+    const shown = new Set([...it.tags, ...textTags(it.text), ...(it.autoTags || [])]);
+    const add = tags.filter(t => !shown.has(t));
+    if (!add.length) continue;
+    before.push([it, it.text, it.tags, it.mutedAuto || []]);
+    it.tags = [...it.tags, ...add]; it.mutedAuto = (it.mutedAuto || []).filter(t => !add.includes(t)); touch(it, { silent: true });
+  }
+  const label = tags.map(t => '#' + t).join(', ');
+  if (!before.length) { toast(`The selected jots already have ${label}.`); return false; }
+  afterTagChange(before, `Added ${label} to ${plural(before.length, 'jot', 'jots')}`);
+  return true;
+}
+// Tag changes keep the selection and the panel open, so you can add and remove in one go. Undo covers each step.
+function afterTagChange(before, msg) {
   if (state.sel && before.some(([it]) => it.id === state.sel)) renderEditor();
-  exitSelect(); buzz(15);
-  toast(`${tag ? `Removed #${tag} from` : 'Cleared tags on'} ${plural(before.length, 'jot', 'jots')}`, 'Undo', () => {
+  scheduleRender(); buzz(10);
+  toast(msg, 'Undo', () => {
     for (const [it, text, tags, muted] of before) { it.text = text; it.tags = tags; it.mutedAuto = muted; touch(it, { silent: true }); }
     scheduleRender(); if (state.sel) renderEditor();
   }, 10000);
 }
-function selTagMenu(picked) {
+function tagPanel(picked) {
   const tagc = new Map();
   for (const it of picked) for (const t of (S.tg[S.num.get(it.id)] || [])) tagc.set(t, (tagc.get(t) || 0) + 1);
-  if (!tagc.size) return '<div class="seltags"><span class="faint">The selected jots have no tags.</span></div>';
-  const btns = [...tagc.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const known = new Set(); for (const it of S.items.values()) if (!it.deleted) for (const t of (S.tg[S.num.get(it.id)] || [])) known.add(t);
+  const opts = [...known].sort().slice(0, 300).map(t => `<option value="#${esc(t)}"></option>`).join('');
+  const chips = [...tagc.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([t, n]) => `<button class="mini" data-cleartag="${esc(t)}" aria-label="Remove #${esc(t)} from ${n} selected">#${esc(t)} <span class="faint">${n}</span> \u00d7</button>`).join('');
-  return `<div class="seltags"><span class="faint">Remove from selected:</span><button class="mini danger" data-cleartag="*">All tags</button>${btns}</div>`;
+  return `<div class="tagpanel" role="group" aria-label="Manage tags on the selected jots">
+    <div class="tp-row"><label class="tp-lab" for="selTagIn">Add</label><input id="selTagIn" type="text" list="selTagList" placeholder="#tag, another" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><button class="selbtn" data-addtags>Add</button><datalist id="selTagList">${opts}</datalist></div>
+    <div class="tp-row"><span class="tp-lab">Remove</span>${chips ? `${chips}<button class="mini danger" data-cleartag="*">All tags</button>` : '<span class="faint">The selected jots have no tags yet.</span>'}</div>
+  </div>`;
+}
+function sharePanel(k) {
+  const what = plural(k, 'jot', 'jots');
+  return `<div class="tagpanel" role="group" aria-label="Share the selected jots">
+    <div class="tp-row"><button class="selbtn" data-sharevia="sheet" ${canShareFiles ? '' : 'disabled'}>Share with an app&#x2026;</button><button class="selbtn" data-sharevia="download">Download file</button></div>
+    <p class="faint tp-note">${canShareFiles ? `Share opens the share sheet (Mail, Messages, Slack, WhatsApp and more) with ${what} as one file. Download saves the same file, to attach yourself or keep.` : `This browser can’t open a share sheet with a file. Download the file, then attach it to an email or message.`} They import it into their own NotePannuda; your devices don’t pair.</p>
+  </div>`;
 }
 function renderSelbar() {
   const bar = $('#selbar'); if (!bar) return;
   $('#list').classList.toggle('selecting', state.selMode);
   if (!state.selMode) { bar.hidden = true; return; }
-  const n = state.allIds.length, k = state.picked.size, all = n > 0 && k === n;
+  // A re-render (sync, a tag change) must not wipe what's being typed in the add field.
+  const tin = $('#selTagIn'), typed = tin && !state.clearTagIn ? tin.value : '', focused = !!tin && document.activeElement === tin;
+  state.clearTagIn = false;
+  const n = state.allIds.length, k = state.picked.size, all = n > 0 && k === n, trash = state.view === 'trash';
   const tasks = [...state.picked].map(id => S.items.get(id)).filter(it => it && it.type === 'task');
   const reopen = tasks.length > 0 && tasks.every(t => t.done);
-  const doneLabel = `${reopen ? 'Reopen' : 'Complete'}${tasks.length && tasks.length !== k ? ` ${tasks.length.toLocaleString()} ${tasks.length === 1 ? 'task' : 'tasks'}` : ''}`;
+  const doneLong = `${reopen ? 'Reopen' : 'Complete'}${tasks.length && tasks.length !== k ? ` ${tasks.length.toLocaleString()} ${tasks.length === 1 ? 'task' : 'tasks'}` : ''}`;
+  // Every action looks the same; only colour of the words hints at what it does. A button asking for a
+  // second tap is the one thing that stands out. On a phone the short label is used so they fit one row.
+  const L = (long, short = long) => `<span class="lg">${long}</span><span class="sh">${short}</span>`;
+  const btn = (act, cls, label, extra = '') => `<button class="selbtn ${cls}" data-selact="${act}" ${extra}>${label}</button>`;
+  const off = k ? '' : 'disabled';
+  const acts = trash ? [
+    btn('restore', 'ok', 'Restore', off),
+    btn('forget', 'danger' + (state.armed === 'sel' ? ' armed' : ''), state.armed === 'sel' ? L(`Delete ${k.toLocaleString()} forever? Select again`, 'Confirm?') : 'Delete forever', off)
+  ] : [
+    btn('complete', 'ok', L(doneLong, reopen ? 'Reopen' : 'Complete'), `${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}"`),
+    btn('share', state.shareMenu ? 'on' : '', L('Share&#x2026;', 'Share'), `${off} aria-expanded="${!!state.shareMenu}"`),
+    btn('tags', state.tagMenu ? 'on' : '', L('Manage tags', 'Tags'), `${off} aria-expanded="${!!state.tagMenu}"`),
+    btn('delete', 'danger' + (state.delArmed ? ' armed' : ''), state.delArmed ? L(`Delete ${k.toLocaleString()}? Select again`, 'Confirm?') : 'Delete', off)
+  ];
+  acts.push(btn('cancel', '', 'Cancel'));
   bar.hidden = false;
-  bar.innerHTML = `<label><input type="checkbox" id="selAll" ${all ? 'checked' : ''}> Select all (${n.toLocaleString()})</label>
-    <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span>
-    ${state.view === 'trash' ? `<button class="btn-ok" data-selact="restore" ${k ? '' : 'disabled'}>Restore</button>
-    <button class="btn-danger" data-selact="forget" ${k ? '' : 'disabled'}>${state.armed === 'sel' ? `Delete ${k.toLocaleString()} forever? Select again` : 'Delete forever'}</button>` : `<button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
-    <button class="ghost" data-selact="share" ${k ? '' : 'disabled'}>Share&#x2026;</button>
-    <button class="ghost" data-selact="tags" ${k ? '' : 'disabled'} aria-expanded="${!!state.tagMenu}">Clear tags</button>
-    <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>`}
-    <button class="ghost" data-selact="cancel">Cancel</button>${state.tagMenu && k && state.view !== 'trash' ? selTagMenu([...state.picked].map(id => S.items.get(id)).filter(Boolean)) : ''}`;
+  bar.innerHTML = `<div class="selhead"><label><input type="checkbox" id="selAll" ${all ? 'checked' : ''}> Select all (${n.toLocaleString()})</label>
+    <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span></div>
+    <div class="selacts">${acts.join('')}</div>${state.tagMenu && k && !trash ? tagPanel([...state.picked].map(id => S.items.get(id)).filter(Boolean)) : ''}${state.shareMenu && k && !trash ? sharePanel(k) : ''}`;
   $('#selAll').indeterminate = k > 0 && !all;
+  const nin = $('#selTagIn');
+  if (nin) { nin.value = typed; if (focused) { nin.focus(); nin.setSelectionRange(typed.length, typed.length); } }
 }
 
 // ---------- resizable side panels (wide screens) ----------
@@ -2995,7 +3082,7 @@ function renderEditor() {
     <div class="field"><span class="lab" id="edClLab">${clLabel(it)}</span><ul class="cl" id="edCl">${edChecklist(it)}</ul><div><button class="mini" data-addline>Add checklist item</button></div></div>
     <div class="field"><span class="lab">Tags</span><div class="tagedit">${tagsHTML}<input type="text" id="edTag" placeholder="Add tag" aria-label="Add tag" style="width:auto;flex:1;min-width:100px"></div></div>
   </div>
-  <div class="ed-foot"><span>Created ${new Date(it.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span><span class="ed-foot-acts"><button class="ghost" data-edshare>Share&#x2026;</button><button class="ghost danger" data-eddel>Delete</button></span></div>`;
+  <div class="ed-foot"><span>Created ${new Date(it.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span><span class="ed-foot-acts">${canShareFiles ? '<button class="ghost" data-edshare>Share&#x2026;</button>' : ''}<button class="ghost" data-eddl>Download</button><button class="ghost danger" data-eddel>Delete</button></span></div>`;
 }
 
 let toastT;
@@ -3331,13 +3418,32 @@ function bindUI() {
     if (b.dataset.selact === 'restore') { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); restoreItems(items); }
     if (b.dataset.selact === 'forget' && armed('sel')) { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); deleteForever(items); }
     if (b.dataset.selact === 'cancel') exitSelect();
-    if (b.dataset.selact === 'tags') { state.tagMenu = !state.tagMenu; renderSelbar(); }
-    if (b.dataset.selact === 'share') { const order = new Map(state.allIds.map((id, i) => [id, i])); shareItems([...state.picked].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9)).map(id => S.items.get(id)), exitSelect); }
+    if (b.dataset.selact === 'tags') { state.tagMenu = !state.tagMenu; state.shareMenu = false; renderSelbar(); }
+    if (b.dataset.selact === 'share') { state.shareMenu = !state.shareMenu; state.tagMenu = false; renderSelbar(); }
   });
   $('#selbar').addEventListener('click', e => {
     const b = e.target.closest('[data-cleartag]'); if (!b) return;
     const items = [...state.picked].map(id => S.items.get(id));
     clearTags(items, b.dataset.cleartag === '*' ? null : b.dataset.cleartag);
+  });
+  const addFromField = () => {
+    const inp = $('#selTagIn'); if (!inp) return;
+    const { tags, bad } = parseTagInput(inp.value);
+    if (!tags.length) { toast(bad.length ? 'Tags can use letters, numbers, - _ and /.' : 'Type a tag to add, like #work.'); inp.focus(); return; }
+    if (addTags([...state.picked].map(id => S.items.get(id)), tags)) { state.clearTagIn = true; inp.value = ''; }
+    if (bad.length) setTimeout(() => toast(`Skipped ${bad.map(t => '\u201c' + t + '\u201d').join(', ')}: tags can use letters, numbers, - _ and /.`), 1800);
+  };
+  $('#selbar').addEventListener('click', e => { if (e.target.closest('[data-addtags]')) addFromField(); });
+  $('#selbar').addEventListener('click', e => {
+    const b = e.target.closest('[data-sharevia]'); if (!b) return;
+    const order = new Map(state.allIds.map((id, i) => [id, i]));   // keep the order they're listed in
+    const items = [...state.picked].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9)).map(id => S.items.get(id));
+    b.dataset.sharevia === 'sheet' ? shareItems(items, exitSelect) : downloadItems(items, exitSelect);
+  });
+  $('#selbar').addEventListener('keydown', e => {
+    if (e.target.id !== 'selTagIn') return;
+    if (e.key === 'Enter') { e.preventDefault(); addFromField(); }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); state.tagMenu = false; renderSelbar(); }
   });
   bindResizers();
 
@@ -3386,6 +3492,7 @@ function bindUI() {
     if (d.muteauto) { it.mutedAuto = [...new Set([...(it.mutedAuto || []), d.muteauto])]; touch(it); return renderEditor(); }
     if ('eddel' in d) return del(it);
     if ('edshare' in d) return shareItems([it]);
+    if ('eddl' in d) return downloadItems([it]);
   });
 
   // keyboard shortcuts
