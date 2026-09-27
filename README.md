@@ -16,7 +16,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
 - **Recently deleted:** restore all, by tag, or one by one, or delete forever right away instead of waiting 30 days.
-- **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**) or **Delete**, and Undo if you change your mind.
+- **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**), **Clear tags** (one tag or all of them), or **Delete**, and Undo if you change your mind. To remove a tag everywhere, tap it in the sidebar, choose **Select all**, then **Clear tags**.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
 - **Notifications:** when another device connects, a daily summary of tasks due (at a time you choose), and task reminders. Turn them on in Settings. On a Mac keep the app open (minimized is fine); on Android they arrive while the app is open or recently used, plus an optional background check in Chrome.
 - **Phone-friendly:** swipe to complete or delete, Android back-gesture support, and a share target (share text or files into NotePannuda). Works offline.

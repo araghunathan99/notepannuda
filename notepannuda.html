@@ -270,6 +270,7 @@ body.resizing *{cursor:col-resize!important}
 .selbar label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
 .selbar input{width:18px;height:18px;margin:0}
 .selbar .grow{flex:1;color:var(--graphite)}
+.seltags{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .btn-danger{border:0;background:var(--high);color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600}
 .btn-danger:disabled{opacity:.45;cursor:default}
 .pick{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--rule-strong);background:var(--surface);padding:0;margin:3px 0 0 4px;display:grid;place-items:center;color:#fff}
@@ -564,7 +565,7 @@ body.resizing *{cursor:col-resize!important}
     <p class="faint"><strong>Delete everything</strong> deletes your jots on this device and on all paired devices (you can undo it, or restore from Recently deleted). <strong>Reset this device</strong> unpairs this device and erases NotePannuda from it only; your other devices keep everything, and pairing again copies it all back.</p>
 
     <h4>Shortcuts and quick syntax</h4>
-    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
+    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <strong>Clear tags</strong> in the selection bar removes one tag or all tags from the selected jots, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
     <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>&#x2013;<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>&#x2013;<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
     <p>Checklists: tap the checklist button in the jot box, or start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
     <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> or several at once like <code>p:high,med</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
@@ -778,7 +779,7 @@ const ser = it => { const { autoTags, ...rest } = it; return rest; };
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: { deleted: (it.v && it.v.deleted) || '' }, tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: { deleted: (it.v && it.v.deleted) || '' } } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-27.2';
+const APP_VERSION = '2026-09-27.3';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -2167,11 +2168,11 @@ const saveUI = () => { meta.ui = { capHidden: state.capHidden, status: state.sta
 
 // ---------- selecting several jots ----------
 function enterSelect(firstId) {
-  state.selMode = true; state.picked = new Set(firstId ? [firstId] : []); state.lastPick = firstId || null; state.delArmed = false;
+  state.selMode = true; state.picked = new Set(firstId ? [firstId] : []); state.lastPick = firstId || null; state.delArmed = false; state.tagMenu = false;
   if (isPhone() && state.sel) closeEditor();
   scheduleRender();
 }
-function exitSelect() { state.selMode = false; state.picked = new Set(); state.delArmed = false; scheduleRender(); }
+function exitSelect() { state.selMode = false; state.picked = new Set(); state.delArmed = false; state.tagMenu = false; scheduleRender(); }
 function togglePick(id, range) {
   const order = state.results;
   if (range && state.lastPick && order.includes(state.lastPick) && order.includes(id)) {
@@ -2271,6 +2272,56 @@ function restoreItems(items) {
   scheduleRender(); buzz(10);
   toast(`Restored ${plural(items.length, 'jot', 'jots')}`, 'Undo', () => { for (const it of items) { it.deleted = true; touch(it, { silent: true }); } scheduleRender(); });
 }
+// ---------- clearing tags from several jots ----------
+// A jot's tags come from three places, and clearing handles each: tags added with the tag controls are
+// removed from its list; #tags typed in the text are taken out of the text; auto-tags are switched off
+// for that jot (the same as tapping x on an auto-tag in the editor), so the rule doesn't add them back.
+// In the text, a #tag with more words after it on the same line keeps its word ("Call #acme today" becomes
+// "Call acme today"), so sentences still read; a #tag at the end of a line, or a line of only tags, is removed.
+function stripTextTags(text, drop) { // drop: null for every tag, or a Set of lowercase tag names
+  const isDropped = t => !drop || drop.has(t.toLowerCase());
+  const out = [];
+  for (const line of text.split('\n')) {
+    const next = line.replace(new RegExp(TAG_RE.source, 'gu'), (m, sp, t, off) => {
+      if (!isDropped(t)) return m;
+      const moreWords = line.slice(off + m.length).replace(new RegExp(TAG_RE.source, 'gu'), '').trim() !== '';
+      return moreWords ? sp + t : sp;
+    });
+    if (next === line) { out.push(line); continue; }
+    if (next.trim() === '' && line.trim() !== '') continue;   // a line that held only tags goes away
+    out.push(next.replace(/[ \t]+$/, ''));
+  }
+  return out.join('\n');
+}
+function clearTags(items, tag) { // tag: one tag name, or null to clear every tag
+  const drop = tag ? new Set([tag]) : null, before = [];
+  for (const it of items) {
+    if (!it || it.deleted) continue;
+    const text = stripTextTags(it.text, drop);
+    const tags = drop ? it.tags.filter(t => !drop.has(t)) : [];
+    const autos = (it.autoTags || []).filter(t => !drop || drop.has(t));
+    const muted = autos.length ? [...new Set([...(it.mutedAuto || []), ...autos])] : it.mutedAuto || [];
+    if (text === it.text && tags.length === it.tags.length && muted.length === (it.mutedAuto || []).length) continue;
+    before.push([it, it.text, it.tags, it.mutedAuto || []]);
+    it.text = text; it.tags = tags; it.mutedAuto = muted; touch(it, { silent: true });
+  }
+  state.tagMenu = false;
+  if (!before.length) { toast(tag ? `None of the selected jots have #${tag}.` : 'The selected jots have no tags.'); scheduleRender(); return; }
+  if (state.sel && before.some(([it]) => it.id === state.sel)) renderEditor();
+  exitSelect(); buzz(15);
+  toast(`${tag ? `Removed #${tag} from` : 'Cleared tags on'} ${plural(before.length, 'jot', 'jots')}`, 'Undo', () => {
+    for (const [it, text, tags, muted] of before) { it.text = text; it.tags = tags; it.mutedAuto = muted; touch(it, { silent: true }); }
+    scheduleRender(); if (state.sel) renderEditor();
+  }, 10000);
+}
+function selTagMenu(picked) {
+  const tagc = new Map();
+  for (const it of picked) for (const t of (S.tg[S.num.get(it.id)] || [])) tagc.set(t, (tagc.get(t) || 0) + 1);
+  if (!tagc.size) return '<div class="seltags"><span class="faint">The selected jots have no tags.</span></div>';
+  const btns = [...tagc.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([t, n]) => `<button class="mini" data-cleartag="${esc(t)}" aria-label="Remove #${esc(t)} from ${n} selected">#${esc(t)} <span class="faint">${n}</span> \u00d7</button>`).join('');
+  return `<div class="seltags"><span class="faint">Remove from selected:</span><button class="mini danger" data-cleartag="*">All tags</button>${btns}</div>`;
+}
 function renderSelbar() {
   const bar = $('#selbar'); if (!bar) return;
   $('#list').classList.toggle('selecting', state.selMode);
@@ -2284,8 +2335,9 @@ function renderSelbar() {
     <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span>
     ${state.view === 'trash' ? `<button class="btn-ok" data-selact="restore" ${k ? '' : 'disabled'}>Restore</button>
     <button class="btn-danger" data-selact="forget" ${k ? '' : 'disabled'}>${state.armed === 'sel' ? `Delete ${k.toLocaleString()} forever? Select again` : 'Delete forever'}</button>` : `<button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
+    <button class="ghost" data-selact="tags" ${k ? '' : 'disabled'} aria-expanded="${!!state.tagMenu}">Clear tags</button>
     <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>`}
-    <button class="ghost" data-selact="cancel">Cancel</button>`;
+    <button class="ghost" data-selact="cancel">Cancel</button>${state.tagMenu && k && state.view !== 'trash' ? selTagMenu([...state.picked].map(id => S.items.get(id)).filter(Boolean)) : ''}`;
   $('#selAll').indeterminate = k > 0 && !all;
 }
 
@@ -3188,6 +3240,12 @@ function bindUI() {
     if (b.dataset.selact === 'restore') { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); restoreItems(items); }
     if (b.dataset.selact === 'forget' && armed('sel')) { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); deleteForever(items); }
     if (b.dataset.selact === 'cancel') exitSelect();
+    if (b.dataset.selact === 'tags') { state.tagMenu = !state.tagMenu; renderSelbar(); }
+  });
+  $('#selbar').addEventListener('click', e => {
+    const b = e.target.closest('[data-cleartag]'); if (!b) return;
+    const items = [...state.picked].map(id => S.items.get(id));
+    clearTags(items, b.dataset.cleartag === '*' ? null : b.dataset.cleartag);
   });
   bindResizers();
 
