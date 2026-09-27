@@ -8,14 +8,14 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 
 ## Features
 
-- **Instant capture:** every jot saves as you type. Finish with **Save note** or **Save as task** (or Enter / ⌘+Enter). On phones and tablets, Enter adds a new line and the Note / Task buttons save (changeable in Settings). The checklist button turns a line into a checklist item. On a computer, drag the divider under the jot box to make it taller or shorter. Quick syntax: `#tag`, `!h` `!m` `!l` for priority, `due:fri`, `due:+3d`, `w:3` for weight, and `[]` to start a checklist.
+- **Instant capture:** every jot saves as you type. Finish with **Save note** or **Save as task** (or Enter / Cmd+Enter). On phones and tablets, Enter adds a new line and the Note / Task buttons save (changeable in Settings). The checklist button turns a line into a checklist item. On a computer, drag the divider under the jot box to make it taller or shorter. Quick syntax: `#tag`, `!h` `!m` `!l` for priority, `due:fri`, `due:+3d`, `w:3` for weight, and `[]` to start a checklist.
 - **Tasks:** priority, weight, due dates, reminders, and checklists. Checking the last item completes the task.
 - **Organized automatically:** tasks are grouped by Overdue, Today, Next 7 days, Later, and No due date. Completed tasks move to their own section.
 - **Search:** multi-word, instant even with 10,000 jots, with filters like `is:task`, `p:high,med`, `w:3-5`, `due:week`, `#tag`, and `-word`, plus `sort:` options. Priority and weight buttons let you pick several at once.
 - **Auto-tags:** keyword rules tag jots for you.
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
-- **Select to complete or delete in bulk:** choose **Select** above the list, ⌘/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**) or **Delete**, and Undo if you change your mind.
+- **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**) or **Delete**, and Undo if you change your mind.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
 - **Notifications:** when another device connects, a daily summary of tasks due (at a time you choose), and task reminders. Turn them on in Settings. On a Mac keep the app open (minimized is fine); on Android they arrive while the app is open or recently used, plus an optional background check in Chrome.
 - **Phone-friendly:** swipe to complete or delete, Android back-gesture support, and a share target (share text or files into NotePannuda). Works offline.
@@ -54,7 +54,7 @@ Run `bash publish.sh` again whenever you have updated files. To use a different 
 
 1. On github.com, choose **+**, then **New repository**. Name it `notepannuda`, choose **Public**, and select **Create repository**.
 2. Select **uploading an existing file**, drag in all the files from this folder, then select **Commit changes**.
-   `.nojekyll` is hidden on a Mac by default. Press ⌘⇧. (period) in Finder to show it. The site works without it.
+   `.nojekyll` is hidden on a Mac by default. Press Cmd+Shift+. (period) in Finder to show it. The site works without it.
 3. Go to **Settings**, then **Pages**. Set Source to **Deploy from a branch**, Branch to **main**, folder **/ (root)**, and select **Save**.
 4. After a minute or two, open `https://YOUR-USERNAME.github.io/notepannuda/notepannuda.html`.
 
@@ -63,18 +63,18 @@ The repository is public, but it contains only the empty app. Your notes live on
 ## Install
 
 **Mac:** use one browser consistently, since each browser keeps its own copy of your notes.
-- **Chrome:** open your app's address, then use the install icon in the address bar, or the ⋮ menu: **Cast, save, and share**, then **Install page as app**.
-- **Edge:** **…** menu, then **Apps**, then **Install this site as an app**.
+- **Chrome:** open your app's address, then use the install icon in the address bar, or the three-dot menu: **Cast, save, and share**, then **Install page as app**.
+- **Edge:** **...** menu, then **Apps**, then **Install this site as an app**.
 - **Safari (macOS Sonoma or later):** **File**, then **Add to Dock**. Always use the Dock app, since it keeps its own storage.
 - **Tip:** add NotePannuda to **System Settings**, then **General**, then **Login Items**, and leave it open (minimized is fine). Your phone then syncs within seconds whenever you open it.
 
-**Pixel / Android:** open the address in Chrome, then tap ⋮, then **Add to home screen**, then **Install**. Long-press the icon for the **New jot** and **Tasks** shortcuts.
+**Pixel / Android:** open the address in Chrome, then tap the three-dot menu, then **Add to home screen**, then **Install**. Long-press the icon for the **New jot** and **Tasks** shortcuts.
 
 ## Pair your devices
 
 1. On a device that's already set up, open **Settings** and select **Show pairing code** (or **Add a device**).
 2. On the new device, point the Camera app at the QR code and open the link, then tap **Pair**. Or open NotePannuda there, choose **Enter a code**, and type the 26-character code.
-3. Each device should say **Connected to …** within a few seconds.
+3. Each device should say **Connected to ...** within a few seconds.
 
 You can pair as many devices as you like. Pair each new one with the code from any device in the group. Give each device a name in Settings so messages read naturally ("Edited on Pixel 9 Pro and Mac").
 
@@ -110,6 +110,6 @@ Your notes exist only on your devices. Now and then, use **Export file** (or **S
 - **The pairing link opened in Chrome instead of the app (Android):** that's fine. They share storage.
 - **Stuck on "Paired. Syncs when your other device is open":** make sure both apps are open and online, then select **Sync now** in Settings on both.
 - **"Can't reach the relays that introduce your devices":** try another network, or edit the relay list under **How direct sync works**.
-- **"Syncing … through relays":** the network blocks direct connections. Everything still syncs, and large changes are just slower.
+- **"Syncing ... through relays":** the network blocks direct connections. Everything still syncs, and large changes are just slower.
 - **No "Scan a code" button:** use the phone's Camera app, or type the code.
 - **Unpairing** stops syncing but never deletes notes. **Clearing a browser's site data** deletes that device's notes: re-pair it and they sync back from your other devices.

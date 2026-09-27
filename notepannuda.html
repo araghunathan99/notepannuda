@@ -286,6 +286,7 @@ body.resizing *{cursor:col-resize!important}
 .time-in{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:2px 6px;font-size:13px;margin-left:4px}
 .stats .mini{padding:2px 9px;font-size:12px;line-height:1.4}
 .cap-handle,.fab{display:none}
+.mini.danger{color:var(--high);border-color:var(--high)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .menu-btn{display:none}
 .filters{display:contents}
@@ -453,7 +454,7 @@ body.resizing *{cursor:col-resize!important}
           <div class="cap-actions">
             <button class="capbtn clbtn" id="capList" title="Make this line a checklist item (tap again to undo)" aria-label="Checklist item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="6" rx="1.5"/><path d="m4.8 7.6 1.3 1.3 2.3-2.6"/><rect x="3.5" y="13.5" width="6" height="6" rx="1.5"/><path d="M13 7.5h7.5M13 16.5h7.5"/></svg><span class="lbl-long">Checklist</span></button>
             <button class="capbtn note" id="capNote" disabled title="Save this jot as a note" aria-label="Save as note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4"/></svg><span class="lbl-long">Save note</span><span class="lbl-short">Note</span></button>
-            <button class="capbtn task" id="capTaskBtn" disabled title="Save this jot as a task (âŒ˜+Enter)" aria-label="Save as task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span class="lbl-long">Save as task</span><span class="lbl-short">Task</span></button>
+            <button class="capbtn task" id="capTaskBtn" disabled title="Save this jot as a task (&#x2318;+Enter)" aria-label="Save as task"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span class="lbl-long">Save as task</span><span class="lbl-short">Task</span></button>
           </div>
         </div>
       </div>
@@ -528,7 +529,7 @@ body.resizing *{cursor:col-resize!important}
     <h4>Send changes, export and import</h4>
     <p>Save everything to a file and move it any way you like: Google Drive, Files, email, Quick Share. Importing merges with the same rules as sync, so importing an older or repeated file never loses anything.</p>
     <div class="actions">
-      <button class="primary" id="sendChangesBtn">Send changesâ€¦</button>
+      <button class="primary" id="sendChangesBtn">Send changes&#x2026;</button>
       <button class="ghost" id="exportBtn">Export file</button>
       <label class="ghost" style="cursor:pointer">Import file<input type="file" id="importIn" accept=".json,.txt,application/json,text/plain" hidden></label>
     </div>
@@ -544,7 +545,7 @@ body.resizing *{cursor:col-resize!important}
     <h4>Enter key in the jot box</h4>
     <div class="seg" id="enterSeg" role="group" aria-label="What Enter does in the jot box"><button data-enter="auto">Automatic</button><button data-enter="save">Saves the jot</button><button data-enter="newline">Adds a new line</button></div>
     <p class="faint" id="enterNote" style="margin-top:6px"></p>
-    <p>Automatic: on a phone or tablet, Enter adds a new line and the <strong>Note</strong> / <strong>Task</strong> buttons save; with a keyboard, Enter saves and Shift+Enter adds a new line. âŒ˜+Enter always saves as a task.</p>
+    <p>Automatic: on a phone or tablet, Enter adds a new line and the <strong>Note</strong> / <strong>Task</strong> buttons save; with a keyboard, Enter saves and Shift+Enter adds a new line. &#x2318;+Enter always saves as a task.</p>
 
     <h4>Auto-tag rules</h4>
     <p>One rule per line: <code>tag: keyword, keyword, keyword</code>. A jot containing any keyword gets the tag. Keywords match the start of words, so <code>invoic</code> catches invoice and invoicing.</p>
@@ -552,16 +553,21 @@ body.resizing *{cursor:col-resize!important}
     <div class="actions"><button class="primary" id="saveRulesBtn">Save rules and retag</button></div>
 
     <h4>Data</h4>
+    <p>Deleted jots stay in <strong>Recently deleted</strong> (in the menu) so you can restore them.</p>
     <div class="actions">
       <button class="ghost" id="stressBtn">Add 10,000 test jots</button>
       <button class="ghost danger" id="wipeBtn">Delete everything</button>
+      <button class="ghost danger" id="resetBtn">Reset this device</button>
     </div>
+    <p class="faint"><strong>Export file</strong> saves your notes as a backup (deleted jots are left out). <strong>Send changes</strong> also carries deletions, so importing it on another device removes what you deleted here.</p>
+    <p class="faint"><strong>Delete everything</strong> deletes your jots on this device and on all paired devices (you can undo it, or restore from Recently deleted). <strong>Reset this device</strong> unpairs this device and erases NotePannuda from it only; your other devices keep everything, and pairing again copies it all back.</p>
 
     <h4>Shortcuts and quick syntax</h4>
-    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">âŒ˜</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">âŒ˜</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">âŒ˜</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
-    <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>â€“<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>â€“<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
+    <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
+    <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>&#x2013;<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>&#x2013;<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
     <p>Checklists: tap the checklist button in the jot box, or start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
     <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> or several at once like <code>p:high,med</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
+    <p class="faint" id="appVersion" style="margin-top:18px"></p>
   </div>
 </div>
 <div class="dscrim" id="drawerScrim"></div>
@@ -764,6 +770,12 @@ function markDirty(shard) { Local.dirty.add(shard); Local.schedule(); }
 
 // Serialized form: derived fields (autoTags) are never persisted.
 const ser = it => { const { autoTags, ...rest } = it; return rest; };
+// A deleted jot leaves this device as a stub: just "this id is deleted, at this time". Receivers that
+// still have the jot keep its text (so Recently deleted can restore it there); the deletion still syncs.
+const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: { deleted: (it.v && it.v.deleted) || '' }, tv: {}, conflicts: {} });
+const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: { deleted: (it.v && it.v.deleted) || '' } } : ser(it);
+const RECENT_DAYS = 30;
+const APP_VERSION = '2026-09-27.1';   // Recently deleted keeps a jot's text this long
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -816,6 +828,7 @@ function passFilters(it, Q, c) {
     case 'upcoming': if (!isTask || it.done || !it.due || it.due < c.td || it.due > c.wk) return false; break;
     case 'overdue': if (!isTask || it.done || !it.due || it.due >= c.td) return false; break;
     case 'done': if (!isTask || !it.done) return false; break;
+    case 'trash': break;
   }
   if (state.status === 'open' && isTask && it.done && !justDone.has(it.id)) return false;
   if (state.status === 'done' && !(isTask && it.done)) return false;
@@ -924,7 +937,7 @@ function runSearch() {
   const res = [];
   const iter = cand ? [...cand].map(n => S.items.get(S.ids[n])) : S.items.values();
   for (const it of iter) {
-    if (!it || it.deleted) continue;
+    if (!it || !!it.deleted !== (state.view === 'trash') || it.stub) continue; // Recently deleted shows deleted jots that still have their text
     const h = S.hay[S.num.get(it.id)];
     if (Q.terms.length && !Q.terms.every(t => h.includes(t))) continue;
     if (Q.neg.length && Q.neg.some(t => h.includes(t))) continue;
@@ -1134,11 +1147,21 @@ function autoMergeText(a, b) {
 function mergeRecord(L, R) {
   if (!L) return R; if (!R) return L;
   ensureStamps(L); ensureStamps(R);
+  if (L.stub || R.stub) {
+    // A stub only carries a deletion. Two stubs: the later deletion. A stub and a full copy: the full copy's
+    // content, with the deletion compared by time (and an edit made after the deletion still brings it back).
+    if (L.stub && R.stub) { const W = (R.v.deleted || '') > (L.v.deleted || '') ? R : L; return { ...W, v: { ...W.v }, createdAt: Math.min(L.createdAt || Infinity, R.createdAt || Infinity), updatedAt: Math.max(L.updatedAt || 0, R.updatedAt || 0) }; }
+    const [F, St] = L.stub ? [R, L] : [L, R];
+    const X = { ...F, stub: false, deleted: true, v: Object.fromEntries(SYNC_FIELDS.map(f => [f, '0'])), tv: { ...(F.tv || {}) }, conflicts: {}, updatedAt: St.updatedAt };
+    X.v.deleted = St.v.deleted || '0';
+    return L.stub ? mergeRecord(X, F) : mergeRecord(F, X);
+  }
   const out = { id: L.id, createdAt: Math.min(L.createdAt || Infinity, R.createdAt || Infinity), shard: L.shard || R.shard, v: {}, conflicts: {} };
   if (!isFinite(out.createdAt)) out.createdAt = Date.now();
   for (const f of SYNC_FIELDS) {
     if (f === 'text') continue;
-    const W = R.v[f] > L.v[f] ? R : L;
+    // Later change wins. On an exact tie, both devices pick the same value (compared as text), so they always agree.
+    const W = R.v[f] > L.v[f] ? R : R.v[f] < L.v[f] ? L : (JSON.stringify(R[f] ?? null) > JSON.stringify(L[f] ?? null) ? R : L);
     out[f] = W[f]; out.v[f] = W.v[f];
   }
   // text: version vectors tell "edited on top of" apart from "edited at the same time"
@@ -1182,6 +1205,7 @@ function mergeIncoming(list) {
     const m = mergeRecord(l, r);
     if (l && canon(l) === canon(m)) continue;
     if (l && l.text !== m.text) texts.add(l.id);
+    if (l && !m.stub) delete l.stub;   // a stub that meets a full copy becomes a full record again
     const it = l ? Object.assign(l, m) : m;
     it.autoTags = computeAutoTags(it);
     S.items.set(it.id, it); indexItem(it); primeShadow(it);
@@ -1534,7 +1558,7 @@ class Peer {
 
 // ---------- record fingerprints for fast comparison ----------
 const digestCache = new Map(), bucketCache = new Map();
-const digestOf = it => { let d = digestCache.get(it.id); if (!d) { d = hash53(canon(ensureStamps(it))).toString(36); digestCache.set(it.id, d); } return d; };
+const digestOf = it => { let d = digestCache.get(it.id); if (!d) { d = hash53(it.deleted ? 'deleted|' + ((it.v && it.v.deleted) || '') : canon(ensureStamps(it))).toString(36); digestCache.set(it.id, d); } return d; };
 const bucketOf = id => { let b = bucketCache.get(id); if (b === undefined) { b = hash53(id) % BUCKETS; bucketCache.set(id, b); } return b; };
 function bucketHashes() {
   const lists = {};
@@ -1696,7 +1720,7 @@ const DirectSync = {
     } else if (m.t === 'ping') p.send({ t: 'pong' });
     else if (m.t === 'pong') p.lastPong = Date.now();
   },
-  sendRecords(p, items, echo) { for (let i = 0; i < items.length; i += 250) p.send({ t: 'recs', echo, items: items.slice(i, i + 250).map(ser) }); },
+  sendRecords(p, items, echo) { for (let i = 0; i < items.length; i += 250) p.send({ t: 'recs', echo, items: items.slice(i, i + 250).map(wire) }); },
   receiveRecords(p, items, echo) {
     const r = mergeIncoming(items);
     if (r.changed) {
@@ -1831,7 +1855,7 @@ const DirectSync = {
   },
   fit(list) {
     const items = []; let size = 0;
-    for (const it of list) { const x = ser(it), n = JSON.stringify(x).length; if (items.length && size + n > RELAY_ROUND_BYTES) break; items.push(x); size += n; }
+    for (const it of list) { const x = wire(it), n = JSON.stringify(x).length; if (items.length && size + n > RELAY_ROUND_BYTES) break; items.push(x); size += n; }
     return { items, rest: list.length - items.length };
   },
   markSynced(id) { if (meta.peers && meta.peers[id]) { meta.peers[id].lastSync = Date.now(); saveMeta(); } },
@@ -1863,7 +1887,7 @@ const DirectSync = {
   status() {
     const names = ps => ps.map(p => deviceLabel(p.id)).join(' and ');
     if (!this.hasCode()) return { key: 'off', dot: '', text: 'Sync between devices is off', btn: '<button class="linkbtn" data-open-settings>Set up</button>' };
-    if (!navigator.onLine) return { key: 'offline', dot: 'busy', text: 'Offline. Changes will sync when youâ€™re back online' };
+    if (!navigator.onLine) return { key: 'offline', dot: 'busy', text: 'Offline. Changes will sync when you\u2019re back online' };
     const open = this.open(), all = [...this.peers.values()];
     const viaRelay = [...this.relayPeers.keys()].filter(id => this.relayActive(id));
     const slow = viaRelay.some(id => this.relayPeers.get(id).partial);
@@ -1873,12 +1897,12 @@ const DirectSync = {
     if (open.length) return { key: 'connected', dot: 'ok', text: `Connected to ${names(open)}` };
     if (viaRelay.length) return { key: 'relay', dot: 'ok', text: `Syncing with ${relayText}`, btn: relayBtn };
     const connecting = all.filter(p => p.state === 'connecting');
-    if (connecting.length) return { key: 'connecting', dot: 'busy', text: `Connecting to ${names(connecting)}â€¦` };
+    if (connecting.length) return { key: 'connecting', dot: 'busy', text: `Connecting to ${names(connecting)}\u2026` };
     const failed = all.filter(p => p.state === 'failed');
-    if (failed.length) return { key: 'failed', dot: 'err', text: `Couldnâ€™t connect to ${names(failed)} directly on this network`, btn: '<button class="linkbtn" data-send-changes>Send changes</button>' };
-    if (this.room && Relays.socks.size && !Relays.count()) return { key: 'relays', dot: 'err', text: 'Canâ€™t reach the relays that introduce your devices' };
+    if (failed.length) return { key: 'failed', dot: 'err', text: `Couldn\u2019t connect to ${names(failed)} directly on this network`, btn: '<button class="linkbtn" data-send-changes>Send changes</button>' };
+    if (this.room && Relays.socks.size && !Relays.count()) return { key: 'relays', dot: 'err', text: 'Can\u2019t reach the relays that introduce your devices' };
     if (!this.paired()) return meta.pairRole === 'joined'
-      ? { key: 'pairing', dot: 'busy', text: 'Connecting to your other deviceâ€¦', btn: '<button class="linkbtn" data-open-settings>Details</button>' }
+      ? { key: 'pairing', dot: 'busy', text: 'Connecting to your other device\u2026', btn: '<button class="linkbtn" data-open-settings>Details</button>' }
       : { key: 'pairing', dot: 'busy', text: 'Waiting for your other device to pair', btn: '<button class="linkbtn" data-open-settings>Show code</button>' };
     const last = Math.max(0, ...Object.values(meta.peers || {}).map(x => x.lastSync || 0));
     return { key: 'waiting', dot: '', text: `Paired${last ? `, last synced ${relTime(last)}` : ''}. Syncs when your other device is open` };
@@ -1931,7 +1955,7 @@ const Scanner = {
     const el = $('#scanner'), video = $('#scanVideo');
     let detector;
     try { detector = new BarcodeDetector({ formats: ['qr_code'] }); this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); }
-    catch (e) { toast('The camera isnâ€™t available. Type the code instead.'); return; }
+    catch (e) { toast('The camera isn\u2019t available. Type the code instead.'); return; }
     video.srcObject = this.stream; el.hidden = false; await video.play().catch(() => { });
     Back.push('scanner', () => this.closeNow());
     const loop = async () => {
@@ -1950,7 +1974,7 @@ const Scanner = {
 };
 
 // ---------- send changes, export and import ----------
-const buildExport = () => ({ app: APP_TAG, kind: 'notepannuda-sync', schema: 2, exportedAt: new Date().toISOString(), device: DEVICE, deviceName: deviceName(), rules: { text: meta.rulesText, stamp: meta.rulesUpdatedAt }, items: [...S.items.values()].map(ser) });
+const buildExport = () => ({ app: APP_TAG, kind: 'notepannuda-sync', schema: 2, exportedAt: new Date().toISOString(), device: DEVICE, deviceName: deviceName(), rules: { text: meta.rulesText, stamp: meta.rulesUpdatedAt }, items: [...S.items.values()].map(wire) });
 const exportName = ext => { const d = new Date(); return `notepannuda-${deviceName().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'device'}-${ymd(d)}-${pad(d.getHours())}${pad(d.getMinutes())}.${ext}`; };
 function downloadText(text, name) {
   const a = document.createElement('a');
@@ -1966,32 +1990,37 @@ async function sendChanges() {
       let ok = false; try { ok = navigator.canShare({ files: [f] }); } catch (e) { }
       if (!ok) continue;
       try { await navigator.share({ files: [f], title: 'NotePannuda changes', text: 'Import this file in NotePannuda on your other device.' }); meta.lastExportAt = Date.now(); saveMeta(); }
-      catch (e) { if (e.name !== 'AbortError') toast('Sharing didnâ€™t work. Use Export file instead.'); }
+      catch (e) { if (e.name !== 'AbortError') toast('Sharing didn\u2019t work. Use Export file instead.'); }
       return;
     }
   }
   downloadText(json, exportName('json'));
-  toast('This browser canâ€™t share files, so the file was saved to your downloads instead.');
+  toast('This browser can\u2019t share files, so the file was saved to your downloads instead.');
 }
-function exportFile() { downloadText(JSON.stringify(buildExport()), exportName('json')); meta.lastExportAt = Date.now(); saveMeta(); toast('Exported everything to a file in your downloads.'); }
+function exportFile() {
+  const data = buildExport(); data.items = data.items.filter(i => !i.deleted); data.backup = true;
+  downloadText(JSON.stringify(data), exportName('json')); meta.lastExportAt = Date.now(); saveMeta();
+  toast(`Exported ${plural(data.items.length, 'jot', 'jots')} to a file in your downloads (deleted jots left out).`);
+}
 async function importText(text, source) {
-  let data; try { data = JSON.parse(text); } catch (e) { toast('That file isnâ€™t a NotePannuda file.'); return; }
+  let data; try { data = JSON.parse(text); } catch (e) { toast('That file isn\u2019t a NotePannuda file.'); return; }
   const items = Array.isArray(data) ? data : Array.isArray(data && data.items) ? data.items : null;
-  if (!items) { toast('That file isnâ€™t a NotePannuda file.'); return; }
-  const before = new Map([...S.items.values()].map(it => [it.id, canon(it)]));
+  if (!items) { toast('That file isn\u2019t a NotePannuda file.'); return; }
+  const before = new Map([...S.items.values()].map(it => [it.id, canon(it)])), wasLive = new Set([...S.items.values()].filter(it => !it.deleted).map(it => it.id));
   const hadConflict = new Set([...S.items.values()].filter(it => openConflicts(it).length).map(it => it.id));
   const r = mergeIncoming(items);
-  let added = 0, updated = 0;
+  let added = 0, updated = 0, removed = 0;
   for (const x of items) {
     const it = x && x.id && S.items.get(x.id); if (!it) continue;
-    if (!before.has(x.id)) { if (!it.deleted) added++; } else if (canon(it) !== before.get(x.id)) updated++;
+    if (!before.has(x.id)) { if (!it.deleted) added++; }
+    else if (canon(it) !== before.get(x.id)) { if (it.deleted && wasLive.has(x.id)) removed++; else if (!it.deleted) updated++; }
   }
   const review = [...S.items.values()].filter(it => openConflicts(it).length && !hadConflict.has(it.id)).length;
   if (data.rules && typeof data.rules.stamp === 'string' && data.rules.stamp > (meta.rulesUpdatedAt || '')) { Clock.see(data.rules.stamp); meta.rulesText = data.rules.text; meta.rulesUpdatedAt = data.rules.stamp; retagAll(); }
   if (data.device && data.device !== DEVICE && data.deviceName) devices.set(data.device, { name: data.deviceName });
   r.shards.forEach(sh => Local.dirty.add(sh)); Local.schedule(); saveMeta(); scheduleRender(); refreshEditorAfterSync(r.texts);
   DirectSync.resync();
-  toast(added || updated ? `Imported ${source}: ${added} new, ${updated} updated${review ? `, ${review} to review` : ''}.` : `Nothing new in ${source}. Youâ€™re already up to date.`);
+  toast(added || updated || removed ? `Imported ${source}: ${added} new, ${updated} updated${removed ? `, ${removed} deleted` : ''}${review ? `, ${review} to review` : ''}.` : `Nothing new in ${source}. You\u2019re already up to date.`);
 }
 
 // If a jot you're looking at changes because of another device, show the new text without losing your place.
@@ -2048,7 +2077,7 @@ function dueSummary() {
   if (!dueToday.length && !overdue.length) return null;
   const title = dueToday.length ? `${plural(dueToday.length, 'task', 'tasks')} due today${overdue.length ? `, ${overdue.length} overdue` : ''}` : `${plural(overdue.length, 'overdue task', 'overdue tasks')}`;
   const list = [...dueToday, ...overdue], more = list.length - 3;
-  return { title, body: list.slice(0, 3).map(t => 'â€¢ ' + (firstLine(t.text) || 'Untitled task')).join('\n') + (more > 0 ? `\n+${more} more` : '') };
+  return { title, body: list.slice(0, 3).map(t => '\u2022 ' + (firstLine(t.text) || 'Untitled task')).join('\n') + (more > 0 ? `\n+${more} more` : '') };
 }
 let dueChecking = false;
 async function checkDue() {
@@ -2096,7 +2125,7 @@ function askNotify() { try { if ('Notification' in window && Notification.permis
 
 // ---------- UI state + rendering ----------
 const state = { view: 'all', q: '', tags: new Set(), prios: new Set(), due: '', sortT: { key: 'smart', dir: -1, then: 'due', thenDir: 1 }, sortN: { key: 'updated', dir: -1 }, group: 'urgency', status: 'all', collapsed: new Set(['completed']), sel: null, limit: 200, results: [] };
-const VIEWS = [['all', 'Everything'], ['notes', 'Notes'], ['tasks', 'Open tasks'], ['today', 'Today'], ['upcoming', 'Next 7 days'], ['overdue', 'Overdue'], ['done', 'Completed']];
+const VIEWS = [['all', 'Everything'], ['notes', 'Notes'], ['tasks', 'Open tasks'], ['today', 'Today'], ['upcoming', 'Next 7 days'], ['overdue', 'Overdue'], ['done', 'Completed'], ['trash', 'Recently deleted']];
 Object.assign(state, { capHidden: false, capTemp: false, capH: 96, weights: new Set(), selMode: false, picked: new Set(), allIds: [], lastPick: null, delArmed: false, sideW: 232, edW: 400 });
 const saveUI = () => { meta.ui = { capHidden: state.capHidden, status: state.status, collapsed: [...state.collapsed], sortT: state.sortT, sortN: state.sortN, group: state.group, sideW: state.sideW, edW: state.edW, capH: state.capH }; saveMeta(); };
 
@@ -2145,6 +2174,24 @@ function completePicked() {
     scheduleRender(); if (state.sel) renderEditor();
   });
 }
+function toStub(it) {
+  const st = stubOf(it);
+  for (const k of Object.keys(it)) if (!(k in st)) delete it[k];
+  Object.assign(it, st); it.autoTags = []; indexItem(it); primeShadow(it); markDirty(it.shard);
+}
+function purgeDeleted(all) {
+  const cut = Date.now() - RECENT_DAYS * 864e5; let n = 0;
+  for (const it of S.items.values()) if (it.deleted && !it.stub && (all || (stampTime(it.v && it.v.deleted) || it.updatedAt || 0) < cut)) { toStub(it); n++; }
+  if (n) { Local.schedule(); scheduleRender(); }
+  return n;
+}
+function restoreItems(items) {
+  items = items.filter(it => it && it.deleted);
+  if (!items.length) return;
+  for (const it of items) { it.deleted = false; touch(it, { silent: true }); }
+  scheduleRender(); buzz(10);
+  toast(`Restored ${plural(items.length, 'jot', 'jots')}`, 'Undo', () => { for (const it of items) { it.deleted = true; touch(it, { silent: true }); } scheduleRender(); });
+}
 function renderSelbar() {
   const bar = $('#selbar'); if (!bar) return;
   $('#list').classList.toggle('selecting', state.selMode);
@@ -2156,8 +2203,8 @@ function renderSelbar() {
   bar.hidden = false;
   bar.innerHTML = `<label><input type="checkbox" id="selAll" ${all ? 'checked' : ''}> Select all (${n.toLocaleString()})</label>
     <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span>
-    <button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
-    <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>
+    ${state.view === 'trash' ? `<button class="btn-ok" data-selact="restore" ${k ? '' : 'disabled'}>Restore</button>` : `<button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
+    <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>`}
     <button class="ghost" data-selact="cancel">Cancel</button>`;
   $('#selAll').indeterminate = k > 0 && !all;
 }
@@ -2303,7 +2350,7 @@ function bindSwipe() {
   let s = null, suppress = false, lpSuppress = false;
   const threshold = row => Math.min(120, row.offsetWidth * 0.33);
   list.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'mouse' || !e.isPrimary || state.selMode) return;
+    if (e.pointerType === 'mouse' || !e.isPrimary || state.selMode || state.view === 'trash') return;
     const row = e.target.closest('.item'); if (!row) return;
     const cur = s = { row, x: e.clientX, y: e.clientY, id: e.pointerId, dx: 0, lock: null, armed: false, bg: null, lp: null };
     cur.lp = setTimeout(() => { // long-press: start selecting with this jot
@@ -2399,10 +2446,10 @@ function render() { renderSide(); renderList(); }
 
 function renderSide() {
   const td = today(), wk = addDays(td, 7);
-  const c = { all: 0, notes: 0, tasks: 0, today: 0, upcoming: 0, overdue: 0, done: 0 };
+  const c = { all: 0, notes: 0, tasks: 0, today: 0, upcoming: 0, overdue: 0, done: 0, trash: 0 };
   const tagc = new Map();
   for (const it of S.items.values()) {
-    if (it.deleted) continue;
+    if (it.deleted) { if (!it.stub) c.trash++; continue; }
     c.all++;
     if (it.type !== 'task') c.notes++;
     else if (it.done) c.done++;
@@ -2455,13 +2502,14 @@ function rowHTML(it, terms, td) {
   if (isTask && it.remindAt && !it.done) meta.push(`<span class="pill" title="Reminder">Reminder ${new Date(it.remindAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>`);
   const auto = new Set(it.autoTags || []);
   for (const t of (S.tg[S.num.get(it.id)] || [])) meta.push(`<span class="pill ${auto.has(t) ? 'auto' : ''}">#${esc(t)}</span>`);
-  const when = it.done && it.doneAt ? 'Completed ' + relTime(it.doneAt) : relTime(it.updatedAt);
+  const trash = !!it.deleted;
+  const when = trash ? 'Deleted ' + relTime(it.updatedAt) : it.done && it.doneAt ? 'Completed ' + relTime(it.doneAt) : relTime(it.updatedAt);
   const picked = state.selMode && state.picked.has(it.id);
   const lead = state.selMode ? `<button class="pick ${picked ? 'on' : ''}" role="checkbox" aria-checked="${picked}" data-act="pick" aria-label="Select ${esc(title)}">${picked ? CHECK : ''}</button>` : null;
   return `<div class="item ${state.sel === it.id && !state.selMode ? 'sel' : ''} ${picked ? 'picked' : ''} ${it.done ? 'isdone' : ''} ${pending ? 'justdone' : ''}" role="listitem" data-id="${esc(it.id)}">
-    ${lead || (isTask ? `<button class="check p${it.priority} ${it.done ? 'done' : ''}" role="checkbox" aria-checked="${it.done}" data-act="done" aria-label="${it.done ? 'Reopen' : 'Complete'} ${esc(title)}">${it.done ? CHECK : ''}</button>` : '<span class="notemark" aria-hidden="true"></span>')}
-    <div><div class="t">${hl(title, terms)}</div>${snippet ? `<div class="s">${hl(snippet, terms)}</div>` : ''}${clHTML}${meta.length ? `<div class="m">${meta.join('')}</div>` : ''}</div>
-    <div class="acts"><span class="when">${when}</span><div class="quick"><button class="mini" data-act="toggle">${isTask ? 'Make note' : 'Make task'}</button><button class="mini" data-act="del">Delete</button></div></div>
+    ${lead || (trash ? '<span class="notemark" aria-hidden="true"></span>' : isTask ? `<button class="check p${it.priority} ${it.done ? 'done' : ''}" role="checkbox" aria-checked="${it.done}" data-act="done" aria-label="${it.done ? 'Reopen' : 'Complete'} ${esc(title)}">${it.done ? CHECK : ''}</button>` : '<span class="notemark" aria-hidden="true"></span>')}
+    <div><div class="t">${hl(title, terms)}</div>${snippet ? `<div class="s">${hl(snippet, terms)}</div>` : ''}${trash ? '' : clHTML}${meta.length ? `<div class="m">${meta.join('')}</div>` : ''}</div>
+    <div class="acts"><span class="when">${when}</span>${trash && !state.selMode ? '<button class="mini restore" data-act="restore">Restore</button>' : ''}<div class="quick" ${trash ? 'hidden' : ''}><button class="mini" data-act="toggle">${isTask ? 'Make note' : 'Make task'}</button><button class="mini" data-act="del">Delete</button></div></div>
   </div>`;
 }
 
@@ -2477,6 +2525,7 @@ function effectiveSorts(Q) {
   return { t, n };
 }
 function organize(res, Q, td) {
+  if (state.view === 'trash') return res.length ? [{ key: 'trash', label: 'Deleted jots, newest first', items: [...res].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)) }] : [];
   const wk = addDays(td, 7);
   const c = { td, terms: Q.terms, wordRes: Q.terms.map(t => new RegExp('(^|[^\\p{L}\\p{N}])' + escRe(t), 'u')) };
   const { t, n } = effectiveSorts(Q);
@@ -2531,7 +2580,9 @@ function renderList() {
   if (!res.length) {
     const total = [...S.items.values()].filter(i => !i.deleted).length;
     const filtered = state.q || state.tags.size || state.prios.size || state.due || state.view !== 'all';
-    list.innerHTML = `<div class="empty">${!total
+    list.innerHTML = `<div class="empty">${state.view === 'trash' && !state.q
+      ? `<p>Nothing in Recently deleted.</p><p>When you delete a jot it waits here for ${RECENT_DAYS} days, so you can restore it on all your devices.</p>`
+      : !total
       ? '<p>Nothing here yet.</p><p>Start typing in the jot box. Every jot is saved as you type.</p>'
       : filtered ? '<p>No matches for these filters.</p><p><button class="ghost" data-clear>Clear search and filters</button></p>'
         : '<p>Nothing in this view.</p>'}</div>`;
@@ -2540,12 +2591,16 @@ function renderList() {
       (hidden ? `<button class="more" data-more>Show ${Math.min(200, hidden)} more of ${hidden.toLocaleString()}</button>` : '');
   }
   const total = S.items.size;
-  const chips = [...state.tags].map(t => `<span class="chip pill">#${esc(t)}<button data-untag="${esc(t)}" aria-label="Remove tag filter ${esc(t)}">Ã—</button></span>`).join('');
+  const chips = [...state.tags].map(t => `<span class="chip pill">#${esc(t)}<button data-untag="${esc(t)}" aria-label="Remove tag filter ${esc(t)}">\u00d7</button></span>`).join('');
   const anyFilter = state.q || state.tags.size || state.prios.size || state.weights.size || state.due || state.status !== 'all';
   let nConf = 0; for (const x of S.items.values()) if (!x.deleted && x.conflicts && openConflicts(x).length) nConf++;
   const confBtn = nConf && !Q.is.has('conflict') ? `<button class="linkbtn conflict-link" data-conflicts>${nConf} ${nConf === 1 ? 'jot was' : 'jots were'} edited on two devices. Review</button>` : '';
   const nudge = Q.terms.length && !Q.sort && state.sortT.key !== 'relevance' ? '<button class="linkbtn" data-preset="match">Sort by best match</button>' : '';
   renderSelbar();
+  if (state.view === 'trash') {
+    $('#stats').innerHTML = `<span>${plural(res.length, 'deleted jot', 'deleted jots')}</span>${res.length && !state.selMode ? `<button class="mini" data-select>Select</button><button class="mini" data-restore-all>Restore all</button><button class="mini danger" data-empty-trash>${state.emptyArmed ? 'Empty for good? Select again' : 'Empty'}</button>` : ''}<span class="faint">Kept for ${RECENT_DAYS} days. Restoring brings a jot back on all your devices.</span>`;
+    return;
+  }
   $('#stats').innerHTML = `<span>${res.length.toLocaleString()} ${res.length === 1 ? 'item' : 'items'}</span>${!state.selMode && res.length ? '<button class="mini" data-select>Select</button>' : ''}<span class="st-time">searched ${total.toLocaleString()} in ${ms < 1 ? ms.toFixed(2) : ms.toFixed(1)} ms</span><button class="linkbtn subtle st-sort" data-opensort>${esc(sortSummary(Q))}</button>${confBtn}${nudge}${chips}${anyFilter ? '<button class="mini" data-clear>Clear filters</button>' : ''}`;
   document.querySelectorAll('#statusSeg button').forEach(b => { const on = state.status === b.dataset.s; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   document.querySelectorAll('#weightSeg button').forEach(b => { const on = state.weights.has(+b.dataset.w); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
@@ -2603,8 +2658,8 @@ function renderSync() {
 
 function renderParse(it) {
   const hint = enterSaves()
-    ? '<span class="hint"><span><span class="kbd">Enter</span> save</span><span><span class="kbd">âŒ˜</span> <span class="kbd">Enter</span> save as task</span><span><span class="kbd">Shift</span> <span class="kbd">Enter</span> new line</span></span>'
-    : '<span class="hint"><span><span class="kbd">Enter</span> new line</span><span><span class="kbd">âŒ˜</span> <span class="kbd">Enter</span> save as task</span></span>';
+    ? '<span class="hint"><span><span class="kbd">Enter</span> save</span><span><span class="kbd">\u2318</span> <span class="kbd">Enter</span> save as task</span><span><span class="kbd">Shift</span> <span class="kbd">Enter</span> new line</span></span>'
+    : '<span class="hint"><span><span class="kbd">Enter</span> new line</span><span><span class="kbd">\u2318</span> <span class="kbd">Enter</span> save as task</span></span>';
   const el = $('#parse');
   el.classList.toggle('idle', !it);
   if (!it) { el.innerHTML = `<span>Try <code>Call Sam about the invoice !h due:fri #acme</code> or start a line with <code>[]</code> for a checklist</span>${hint}`; return; }
@@ -2623,9 +2678,9 @@ const X_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stro
 
 function edTagPills(it) {
   const fromText = textTags(it.text).filter(t => !it.tags.includes(t));
-  return it.tags.map(t => `<span class="pill">#${esc(t)}<button data-rmtag="${esc(t)}" aria-label="Remove tag ${esc(t)}">Ã—</button></span>`).join('') +
+  return it.tags.map(t => `<span class="pill">#${esc(t)}<button data-rmtag="${esc(t)}" aria-label="Remove tag ${esc(t)}">\u00d7</button></span>`).join('') +
     fromText.map(t => `<span class="pill" title="From a #hashtag in the text">#${esc(t)}</span>`).join('') +
-    (it.autoTags || []).map(t => `<span class="pill auto" title="Added by an auto-tag rule">#${esc(t)}<button data-muteauto="${esc(t)}" aria-label="Remove auto tag ${esc(t)}">Ã—</button></span>`).join('');
+    (it.autoTags || []).map(t => `<span class="pill auto" title="Added by an auto-tag rule">#${esc(t)}<button data-muteauto="${esc(t)}" aria-label="Remove auto tag ${esc(t)}">\u00d7</button></span>`).join('');
 }
 function edChecklist(it) {
   const cl = checklist(it.text);
@@ -2707,11 +2762,11 @@ function renderEditor() {
 }
 
 let toastT;
-function toast(msg, actLabel, act) {
+function toast(msg, actLabel, act, ms = 5000) {
   const h = $('#toastHost');
   h.innerHTML = `<div class="toast" role="status"><span>${esc(msg)}</span>${actLabel ? `<button>${esc(actLabel)}</button>` : ''}</div>`;
   if (actLabel) h.querySelector('button').onclick = () => { act(); h.innerHTML = ''; };
-  clearTimeout(toastT); toastT = setTimeout(() => { h.innerHTML = ''; }, 5000);
+  clearTimeout(toastT); toastT = setTimeout(() => { h.innerHTML = ''; }, ms);
 }
 
 // ---------- actions ----------
@@ -2804,7 +2859,7 @@ function onCaptureInput() {
   renderParse(it);
 }
 
-function commitCapture(mode) { // mode: 'note' or 'task' (buttons, âŒ˜+Enter), or empty for Enter: the jot's own syntax decides
+function commitCapture(mode) { // mode: 'note' or 'task' (buttons, \u2318+Enter), or empty for Enter: the jot's own syntax decides
   const cap = $('#cap');
   const it = capId && S.items.get(capId);
   if (!it || !cap.value.trim()) return;
@@ -2847,7 +2902,10 @@ function seed() {
     const ts = now - ago * D;
     // Fixed ids: two freshly installed devices that pair merge their sample jots instead of doubling them.
     const it = newItem(Object.assign({ id: `sample-${i + 1}`, type, text, createdAt: ts, updatedAt: ts }, f));
-    stampChanges(it); it.autoTags = computeAutoTags(it);
+    // Stamped as older than anything real: if you've deleted or edited a sample jot on another device,
+    // your change wins when this device syncs (instead of the fresh sample coming back to life).
+    it.v = Object.fromEntries(SYNC_FIELDS.map(k => [k, '000000000000001.00000.sample'])); it.tv = {}; primeShadow(it);
+    it.autoTags = computeAutoTags(it);
     S.items.set(it.id, it); indexItem(it); markDirty(it.shard);
   });
 }
@@ -2921,7 +2979,7 @@ function bindUI() {
       const r = await Notify.request();
       if (r === 'granted') { await Notify.show('Notifications are on', 'NotePannuda will tell you about due tasks and connected devices.', { tag: 'welcome' }); checkDue(); }
     }
-    if (b.dataset.notify === 'test') { const ok = await Notify.show('NotePannuda', 'Notifications are working.', { tag: 'test' }); if (!ok) toast('This browser didnâ€™t show the notification.'); }
+    if (b.dataset.notify === 'test') { const ok = await Notify.show('NotePannuda', 'Notifications are working.', { tag: 'test' }); if (!ok) toast('This browser didn\u2019t show the notification.'); }
     renderNotifySettings();
   });
   $('#notifyCard').addEventListener('change', async e => {
@@ -3006,6 +3064,11 @@ function bindUI() {
     const pr = e.target.closest('[data-preset]'); if (pr) applyPreset(pr.dataset.preset);
     if (e.target.closest('[data-opensort]')) { e.stopPropagation(); openSort(); }
     if (e.target.closest('[data-select]')) enterSelect();
+    if (e.target.closest('[data-restore-all]')) restoreItems(state.allIds.map(id => S.items.get(id)));
+    if (e.target.closest('[data-empty-trash]')) {
+      if (!state.emptyArmed) { state.emptyArmed = true; scheduleRender(); setTimeout(() => { state.emptyArmed = false; scheduleRender(); }, 4000); }
+      else { state.emptyArmed = false; const n = purgeDeleted(true); toast(`Emptied ${plural(n, 'deleted jot', 'deleted jots')}. They can\u2019t be restored now.`); }
+    }
     if (e.target.closest('[data-conflicts]')) { state.q = 'is:conflict'; $('#q').value = 'is:conflict'; state.view = 'all'; scheduleRender(); }
   });
 
@@ -3024,6 +3087,11 @@ function bindUI() {
     const row = e.target.closest('.item'); if (!row) return;
     const it = S.items.get(row.dataset.id); if (!it) return;
     if (state.selMode) { e.preventDefault(); return togglePick(it.id, e.shiftKey); }
+    if (it.deleted) { // Recently deleted: only Restore does anything
+      if (e.target.closest('[data-act="restore"]')) { e.stopPropagation(); restoreItems([it]); }
+      else toast('Restore this jot to open it.', 'Restore', () => restoreItems([it]));
+      return;
+    }
     if (e.metaKey || e.ctrlKey) { e.preventDefault(); return enterSelect(it.id); }
     const act = e.target.closest('[data-act]');
     if (act) {
@@ -3042,6 +3110,7 @@ function bindUI() {
     const b = e.target.closest('[data-selact]'); if (!b) return;
     if (b.dataset.selact === 'delete') deletePicked();
     if (b.dataset.selact === 'complete') completePicked();
+    if (b.dataset.selact === 'restore') { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); restoreItems(items); }
     if (b.dataset.selact === 'cancel') exitSelect();
   });
   bindResizers();
@@ -3049,7 +3118,7 @@ function bindUI() {
   const ed = $('#editor');
   ed.addEventListener('input', e => {
     const it = S.items.get(state.sel); if (!it) return;
-    if (e.target.id === 'edText') { it.text = e.target.value; touch(it); refreshEdTags(); const s = $('#edSaved'); if (s) s.textContent = 'Savingâ€¦'; }
+    if (e.target.id === 'edText') { it.text = e.target.value; touch(it); refreshEdTags(); const s = $('#edSaved'); if (s) s.textContent = 'Saving\u2026'; }
   });
   ed.addEventListener('change', e => {
     const it = S.items.get(state.sel); if (!it) return;
@@ -3103,8 +3172,8 @@ function bindUI() {
       return;
     }
     if (state.selMode && !typing && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') { e.preventDefault(); return selectAll(true); }
-    if (state.selMode && !typing && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); return deletePicked(); }
-    if (state.selMode && !typing && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === 'x') { e.preventDefault(); return completePicked(); }
+    if (state.selMode && !typing && (e.key === 'Delete' || e.key === 'Backspace') && state.view !== 'trash') { e.preventDefault(); return deletePicked(); }
+    if (state.selMode && !typing && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === 'x' && state.view !== 'trash') { e.preventDefault(); return completePicked(); }
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === '/') { e.preventDefault(); q.focus(); q.select(); }
     else if (e.key === 'n') { e.preventDefault(); cap.focus(); }
@@ -3156,7 +3225,7 @@ function bindUI() {
     }
     if (act === 'cancel-pair') state.pendingPair = null;
     if (act === 'cancel-pairing') { state.showPair = false; state.enterCode = false; await unpair(); toast('Pairing cancelled.'); }
-    if (act === 'now') { DirectSync.wake(); DirectSync.resync(); toast(DirectSync.open().length ? 'Syncing now.' : 'Looking for your other devicesâ€¦'); }
+    if (act === 'now') { DirectSync.wake(); DirectSync.resync(); toast(DirectSync.open().length ? 'Syncing now.' : 'Looking for your other devices\u2026'); }
     if (act === 'unpair') { // one tap; Undo puts the pairing back if it was a mistake
       const before = { code: meta.pairCode, role: meta.pairRole, peers: { ...(meta.peers || {}) } };
       state.showPair = false; await unpair();
@@ -3185,7 +3254,7 @@ function bindUI() {
     meta.relayFallback = e.target.checked; saveMeta();
     if (!e.target.checked) { for (const rp of DirectSync.relayPeers.values()) rp.active = false; DirectSync.rq = []; DirectSync.rqChars = 0; }
     else for (const id of Object.keys(meta.peers || {})) { const p = DirectSync.peers.get(id); if (p && p.state === 'failed') DirectSync.maybeRelay(id); }
-    toast(e.target.checked ? 'Small changes will use the relays when a direct connection isnâ€™t possible.' : 'Notes will only travel over direct connections.');
+    toast(e.target.checked ? 'Small changes will use the relays when a direct connection isn\u2019t possible.' : 'Notes will only travel over direct connections.');
     DirectSync.refresh();
   });
   $('#sendChangesBtn').addEventListener('click', sendChanges);
@@ -3202,18 +3271,31 @@ function bindUI() {
   $('#exportBtn').addEventListener('click', exportFile);
   $('#importIn').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
-    try { await importText(await file.text(), `â€œ${file.name}â€`); } catch (err) { toast('Couldnâ€™t read that file.'); }
+    try { await importText(await file.text(), `\u201c${file.name}\u201d`); } catch (err) { toast('Couldn\u2019t read that file.'); }
     e.target.value = '';
   });
   $('#stressBtn').addEventListener('click', () => { closeSettings(); setTimeout(stress, 30); });
+  let resetArmed = false;
+  $('#resetBtn').addEventListener('click', async e => {
+    const local = [...S.items.values()].filter(i => !i.deleted).length;
+    if (!resetArmed) {
+      resetArmed = true;
+      e.target.textContent = DirectSync.paired() ? 'Select again to reset this device' : `Select again: erases ${plural(local, 'jot', 'jots')} for good`;
+      setTimeout(() => { resetArmed = false; e.target.textContent = 'Reset this device'; }, 5000);
+      return;
+    }
+    e.target.disabled = true; e.target.textContent = 'Resetting\u2026';
+    await resetDevice();
+  });
   let wipeArmed = false;
   $('#wipeBtn').addEventListener('click', e => {
     if (!wipeArmed) { wipeArmed = true; e.target.textContent = 'Select again to delete everything'; setTimeout(() => { wipeArmed = false; e.target.textContent = 'Delete everything'; }, 4000); return; }
     wipeArmed = false; e.target.textContent = 'Delete everything';
-    const now = Date.now();
-    for (const it of S.items.values()) if (!it.deleted) { it.deleted = true; it.updatedAt = now; stampChanges(it); indexItem(it); }
+    const now = Date.now(), batch = [];
+    for (const it of S.items.values()) if (!it.deleted) { it.deleted = true; it.updatedAt = now; stampChanges(it); indexItem(it); batch.push(it); }
     S.byShard.forEach((_, sh) => markDirty(sh)); DirectSync.resync();
-    closeEditor(); closeSettings(); toast('Deleted everything. Your other devices will sync the deletion.');
+    closeEditor(); closeSettings(); scheduleRender();
+    toast(`Deleted ${plural(batch.length, 'jot', 'jots')} on all your devices. Undo, or restore them later from Recently deleted.`, 'Undo', () => restoreItems(batch), 15000);
   });
 
   // persistence lifecycle hooks
@@ -3227,15 +3309,24 @@ function bindUI() {
 async function renderNotifySettings() {
   const el = $('#notifyCard'); if (!el) return;
   const pr = Notify.prefs();
-  if (!Notify.supported()) { el.innerHTML = '<p>This browser canâ€™t show notifications.</p>'; return; }
+  if (!Notify.supported()) { el.innerHTML = '<p>This browser can\u2019t show notifications.</p>'; return; }
   const perm = Notification.permission;
   if (perm === 'default') { el.innerHTML = `<div class="actions"><button class="primary" data-notify="enable">Turn on notifications</button></div>`; return; }
-  if (perm === 'denied') { el.innerHTML = '<p class="warn-text">Notifications are blocked for NotePannuda. Allow them in your browserâ€™s site settings (in Chrome: the icon left of the address, then Notifications), then come back here.</p>'; return; }
+  if (perm === 'denied') { el.innerHTML = '<p class="warn-text">Notifications are blocked for NotePannuda. Allow them in your browser\u2019s site settings (in Chrome: the icon left of the address, then Notifications), then come back here.</p>'; return; }
   const bg = await registerDueCheck();
   el.innerHTML = `<label class="check-row"><input type="checkbox" id="nConnect" ${pr.connect ? 'checked' : ''}> When another device connects (while NotePannuda is in the background)</label>
     <label class="check-row"><input type="checkbox" id="nDue" ${pr.due ? 'checked' : ''}> Tasks due today, at <input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in"></label>
     <p class="faint">Task reminders you set on a task always notify. ${bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
     <div class="actions"><button class="mini" data-notify="test">Send a test notification</button></div>`;
+}
+async function resetDevice() {
+  DirectSync.stop();                     // unpair first, so nothing reaches your other devices
+  Local.dirty.clear(); clearTimeout(Local.timer); Local.flush = async () => { }; Local.schedule = () => { };
+  try { if (Local.db) Local.db.close(); } catch (e) { }
+  await new Promise(res => { try { const r = indexedDB.deleteDatabase('notepannuda'); r.onsuccess = r.onerror = r.onblocked = () => res(); } catch (e) { res(); } });
+  try { if (window.caches) await caches.delete('notepannuda-share'); } catch (e) { }
+  if (Local.kind === 'artifact') { try { for (const k of ((await window.storage.list('jot', false)) || {}).keys || []) await window.storage.delete(k, false); } catch (e) { } }
+  location.replace(location.pathname + '?reset=1');
 }
 function renderEnterSeg() {
   document.querySelectorAll('#capSeg [data-cap]').forEach(b => { const on = (b.dataset.cap === 'hidden') === state.capHidden; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
@@ -3247,6 +3338,7 @@ function openSettings() {
   $('#rulesTa').value = meta.rulesText;
   $('#deviceName').value = deviceName();
   renderEnterSeg(); renderNotifySettings();
+  const ver = $('#appVersion'); if (ver) ver.textContent = `NotePannuda version ${APP_VERSION}`;
   state.showPair = state.showPair && DirectSync.hasCode(); state.unpairArmed = false; state.removeArmed = null;
   renderSyncSettings();
   $('#settings').classList.add('open');
@@ -3265,7 +3357,7 @@ function renderSyncSettings() {
       <div class="actions"><button class="primary" data-sync="confirm-pair">Pair</button><button class="ghost" data-sync="cancel-pair">Not now</button></div></div>`;
   } else if (DirectSync.hasCode() && !DirectSync.paired()) {
     html = meta.pairRole === 'joined'
-      ? `<div class="acct-card"><div><strong>Connecting to your other deviceâ€¦</strong><p>Make sure NotePannuda is open on the device whose code you used. This updates by itself when they connect.</p></div>
+      ? `<div class="acct-card"><div><strong>Connecting to your other device\u2026</strong><p>Make sure NotePannuda is open on the device whose code you used. This updates by itself when they connect.</p></div>
         <div class="actions"><button class="ghost" data-sync="cancel-pairing">Cancel</button></div></div>`
       : `<div class="acct-card"><div><strong>Waiting for your other device</strong><p>Scan this code with your other device, or open NotePannuda there and choose <em>Enter a code</em>. This updates by itself when it connects.</p></div>
         <div class="actions"><button class="ghost" data-sync="cancel-pairing">Cancel pairing</button><button class="ghost" data-sync="enter">Enter a code instead</button></div></div>`;
@@ -3276,14 +3368,14 @@ function renderSyncSettings() {
     const list = Object.entries(meta.peers || {}).sort((a, b) => (b[1].lastSync || 0) - (a[1].lastSync || 0));
     const peers = list.length ? `<li><strong>${esc(deviceName())}</strong> <span class="faint">this device</span></li>` + list.map(([id, pr]) => {
       const p = DirectSync.peers.get(id);
-      const s = p && p.state === 'open' ? '<span class="ok-text">connected</span>' : DirectSync.relayActive(id) ? '<span class="ok-text">syncing through relays</span>' : p && p.state === 'connecting' ? 'connectingâ€¦' : p && p.state === 'failed' ? '<span class="err-text">couldnâ€™t connect directly</span>' : pr.lastSync ? 'last synced ' + relTime(pr.lastSync) : 'not synced yet';
+      const s = p && p.state === 'open' ? '<span class="ok-text">connected</span>' : DirectSync.relayActive(id) ? '<span class="ok-text">syncing through relays</span>' : p && p.state === 'connecting' ? 'connecting\u2026' : p && p.state === 'failed' ? '<span class="err-text">couldn\u2019t connect directly</span>' : pr.lastSync ? 'last synced ' + relTime(pr.lastSync) : 'not synced yet';
       const armed = state.removeArmed === id;
       return `<li><strong>${esc(pr.name || 'Another device')}</strong> <span class="faint">${s}</span><button class="mini danger" data-sync="remove" data-id="${esc(id)}">${armed ? 'Select again to remove' : 'Remove'}</button></li>`;
     }).join('') : '';
     html = `<div class="acct-card ${st.key === 'failed' || st.key === 'relays' ? 'warn' : ''}"><div><strong>${esc(st.text)}</strong>
       ${peers ? `<ul class="peer-list">${peers}</ul>` : '<p>Open NotePannuda on your other device and pair it with the code below.</p>'}
-      ${state.removeArmed ? '<p class="faint">Removing a device moves the rest of your devices to a new pairing code, so the removed one canâ€™t sync any more. Devices that arenâ€™t connected right now will need to pair again.</p>' : ''}
-      ${state.missedAfterRemove ? `<p class="warn-text">Pair ${esc(state.missedAfterRemove)} again: ${state.missedAfterRemove.includes(' and ') ? 'they werenâ€™t' : 'it wasnâ€™t'} connected when the code changed.</p>` : ''}
+      ${state.removeArmed ? '<p class="faint">Removing a device moves the rest of your devices to a new pairing code, so the removed one can\u2019t sync any more. Devices that aren\u2019t connected right now will need to pair again.</p>' : ''}
+      ${state.missedAfterRemove ? `<p class="warn-text">Pair ${esc(state.missedAfterRemove)} again: ${state.missedAfterRemove.includes(' and ') ? 'they weren\u2019t' : 'it wasn\u2019t'} connected when the code changed.</p>` : ''}
       ${st.key === 'failed' ? `<p>Some networks block direct connections. It will keep trying${fallbackOn() ? ', and uses the relays for small changes whenever the other device is online' : ''}. Meanwhile, you can use Send changes below.</p>` : ''}</div>
       <div class="actions"><button class="primary" data-sync="now">Sync now</button><button class="ghost" data-sync="${state.showPair ? 'hide' : 'show'}">${state.showPair ? 'Hide code' : 'Add a device'}</button><button class="ghost danger" data-sync="unpair">Unpair</button></div></div>`;
   }
@@ -3340,7 +3432,11 @@ async function init() {
     ensureStamps(it); primeShadow(it);
     it.autoTags = computeAutoTags(it); S.items.set(it.id, it); indexItem(it);
   }
-  if (!meta.seeded && S.items.size === 0) seed();
+  const justReset = new URLSearchParams(location.search).get('reset') === '1';
+  if (justReset) { history.replaceState(null, '', location.pathname); meta.seeded = true; setTimeout(() => toast('This device was reset. It\u2019s empty and unpaired.'), 300); }
+  const joining = /[#&]pair=/.test(location.hash);  // opened from a pairing link: your notes are on their way, no samples
+  if (!meta.seeded && S.items.size === 0 && !joining) seed();
+  purgeDeleted(false);
   meta.seeded = true; saveMeta();
   bindUI(); renderParse(null); renderSortPanel(); render(); renderSync();
   await DirectSync.start();

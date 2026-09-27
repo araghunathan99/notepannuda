@@ -81,7 +81,7 @@ async function dueCheck() {
     const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
     const title = dueToday.length ? `${n(dueToday.length, 'task', 'tasks')} due today${overdue.length ? `, ${overdue.length} overdue` : ''}` : n(overdue.length, 'overdue task', 'overdue tasks');
     const list = [...dueToday, ...overdue], more = list.length - 3;
-    const body = list.slice(0, 3).map(t => '• ' + ((t.text || '').split('\n')[0].trim() || 'Untitled task')).join('\n') + (more > 0 ? `\n+${more} more` : '');
+    const body = list.slice(0, 3).map(t => '\u2022 ' + ((t.text || '').split('\n')[0].trim() || 'Untitled task')).join('\n') + (more > 0 ? `\n+${more} more` : '');
     await self.registration.showNotification(title, { body, icon: 'icon-192.png', badge: 'badge-96.png', tag: 'due-' + td, data: { url: './notepannuda.html?view=today' } });
   }
   await req(db, 'meta', 'readwrite', os => os.put(td, 'dueNotified'));
