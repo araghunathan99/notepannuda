@@ -287,6 +287,8 @@ body.resizing *{cursor:col-resize!important}
 .stats .mini{padding:2px 9px;font-size:12px;line-height:1.4}
 .cap-handle,.fab{display:none}
 .mini.danger{color:var(--high);border-color:var(--high)}
+.trashtags{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.item .acts .quick[hidden]{display:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .menu-btn{display:none}
 .filters{display:contents}
@@ -527,7 +529,7 @@ body.resizing *{cursor:col-resize!important}
     </details>
 
     <h4>Send changes, export and import</h4>
-    <p>Save everything to a file and move it any way you like: Google Drive, Files, email, Quick Share. Importing merges with the same rules as sync, so importing an older or repeated file never loses anything.</p>
+    <p>Save everything to a file and move it any way you like: Google Drive, Files, email, Quick Share. Importing a backup brings back everything in it that's missing here, including jots you deleted forever; importing an older or repeated file never loses anything.</p>
     <div class="actions">
       <button class="primary" id="sendChangesBtn">Send changes&#x2026;</button>
       <button class="ghost" id="exportBtn">Export file</button>
@@ -553,13 +555,12 @@ body.resizing *{cursor:col-resize!important}
     <div class="actions"><button class="primary" id="saveRulesBtn">Save rules and retag</button></div>
 
     <h4>Data</h4>
-    <p>Deleted jots stay in <strong>Recently deleted</strong> (in the menu) so you can restore them.</p>
+    <p>Deleted jots stay in <strong>Recently deleted</strong> (in the menu) for 30 days so you can restore them, all at once, by tag, or one by one. <strong>Delete forever</strong> there erases a jot's text right away instead of waiting.</p>
     <div class="actions">
-      <button class="ghost" id="stressBtn">Add 10,000 test jots</button>
       <button class="ghost danger" id="wipeBtn">Delete everything</button>
       <button class="ghost danger" id="resetBtn">Reset this device</button>
     </div>
-    <p class="faint"><strong>Export file</strong> saves your notes as a backup (deleted jots are left out). <strong>Send changes</strong> also carries deletions, so importing it on another device removes what you deleted here.</p>
+    <p class="faint"><strong>Export file</strong> saves your notes as a backup (deleted jots are left out). Importing a backup restores what's in it: jots deleted forever come back, and jots still in Recently deleted stay there until you restore them (the import offers to). <strong>Send changes</strong> is sync by file: it also carries deletions, so importing it on another device removes what you deleted here.</p>
     <p class="faint"><strong>Delete everything</strong> deletes your jots on this device and on all paired devices (you can undo it, or restore from Recently deleted). <strong>Reset this device</strong> unpairs this device and erases NotePannuda from it only; your other devices keep everything, and pairing again copies it all back.</p>
 
     <h4>Shortcuts and quick syntax</h4>
@@ -731,9 +732,11 @@ function indexItem(it) {
     if (!S.byShard.has(it.shard)) S.byShard.set(it.shard, new Set());
     S.byShard.get(it.shard).add(it.id);
   }
-  const tags = it.deleted ? [] : allTags(it);
+  // Deleted jots that still have their text stay searchable (Recently deleted can filter them by tag or word);
+  // every other view skips deleted jots. A jot deleted forever has nothing left to index.
+  const tags = it.stub ? [] : allTags(it);
   S.tg[n] = tags;
-  const h = it.deleted ? '' : (it.text + ' ' + tags.map(t => '#' + t).join(' ')).toLowerCase();
+  const h = it.stub ? '' : (it.text + ' ' + tags.map(t => '#' + t).join(' ')).toLowerCase();
   const old = S.hay[n] || '';
   if (old === h) return;
   const ot = trigrams(old), nt = trigrams(h);
@@ -774,8 +777,8 @@ const ser = it => { const { autoTags, ...rest } = it; return rest; };
 // still have the jot keep its text (so Recently deleted can restore it there); the deletion still syncs.
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: { deleted: (it.v && it.v.deleted) || '' }, tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: { deleted: (it.v && it.v.deleted) || '' } } : ser(it);
-const RECENT_DAYS = 30;
-const APP_VERSION = '2026-09-27.1';   // Recently deleted keeps a jot's text this long
+const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
+const APP_VERSION = '2026-09-27.2';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -1240,7 +1243,7 @@ function guessDeviceName() {
   return 'This device';
 }
 const deviceName = () => meta.deviceName || guessDeviceName();
-const devices = new Map(); // other devices seen in the sync folder: id -> { name, savedAt }
+const devices = new Map(); // other devices seen through sync or imported files: id -> { name, savedAt }
 const deviceLabel = id => id === DEVICE ? 'this device' : (devices.get(id) || {}).name || (id === 'legacy' ? 'an earlier version' : 'another device');
 
 // ---------- small crypto and encoding helpers ----------
@@ -2002,25 +2005,58 @@ function exportFile() {
   downloadText(JSON.stringify(data), exportName('json')); meta.lastExportAt = Date.now(); saveMeta();
   toast(`Exported ${plural(data.items.length, 'jot', 'jots')} to a file in your downloads (deleted jots left out).`);
 }
+// Import is not sync. Two kinds of file come in here:
+//   * A backup (Export file, or any file that isn't a Send changes file): restoring from it always brings
+//     back what it holds. A jot that's missing here, or was deleted forever here, comes back as a live jot,
+//     and the comeback is stamped as new so sync carries it to your paired devices instead of re-deleting it.
+//     A jot that's still in Recently deleted here stays there (it's recoverable anyway): the toast offers
+//     to restore those in one tap. Everything else merges field by field as usual, so nothing is lost.
+//   * A Send changes file is sync by hand: it merges with the sync rules, including its deletions.
 async function importText(text, source) {
   let data; try { data = JSON.parse(text); } catch (e) { toast('That file isn\u2019t a NotePannuda file.'); return; }
   const items = Array.isArray(data) ? data : Array.isArray(data && data.items) ? data.items : null;
   if (!items) { toast('That file isn\u2019t a NotePannuda file.'); return; }
+  const backup = Array.isArray(data) || data.backup === true || data.kind !== 'notepannuda-sync';
   const before = new Map([...S.items.values()].map(it => [it.id, canon(it)])), wasLive = new Set([...S.items.values()].filter(it => !it.deleted).map(it => it.id));
   const hadConflict = new Set([...S.items.values()].filter(it => openConflicts(it).length).map(it => it.id));
-  const r = mergeIncoming(items);
-  let added = 0, updated = 0, removed = 0;
+  const live = items.filter(x => x && x.id && !x.deleted && !x.stub);
+  let incoming = items, brought = new Set();
+  if (backup) {
+    for (const x of live) for (const st of Object.values(x.v || {})) Clock.see(st); // so the comeback stamp is newer than anything in the file
+    incoming = items.map(x => {
+      if (!x || !x.id || x.deleted || x.stub) return null;              // a backup never deletes anything
+      const l = S.items.get(x.id);
+      if (l && !l.stub) return x;                                        // here already (live, or in Recently deleted): normal merge
+      brought.add(x.id);                                                 // missing, or deleted forever: bring it back
+      return { ...x, deleted: false, v: { ...(x.v || {}), deleted: Clock.now() } };
+    }).filter(Boolean);
+  }
+  const r = mergeIncoming(incoming);
+  let added = 0, updated = 0, removed = 0, back = 0;
   for (const x of items) {
     const it = x && x.id && S.items.get(x.id); if (!it) continue;
     if (!before.has(x.id)) { if (!it.deleted) added++; }
+    else if (brought.has(x.id) && !it.deleted) back++;
     else if (canon(it) !== before.get(x.id)) { if (it.deleted && wasLive.has(x.id)) removed++; else if (!it.deleted) updated++; }
   }
+  // Jots the file has as live that are sitting in Recently deleted here: one tap restores them.
+  const inTrash = live.map(x => S.items.get(x.id)).filter(it => it && it.deleted && !it.stub);
   const review = [...S.items.values()].filter(it => openConflicts(it).length && !hadConflict.has(it.id)).length;
   if (data.rules && typeof data.rules.stamp === 'string' && data.rules.stamp > (meta.rulesUpdatedAt || '')) { Clock.see(data.rules.stamp); meta.rulesText = data.rules.text; meta.rulesUpdatedAt = data.rules.stamp; retagAll(); }
   if (data.device && data.device !== DEVICE && data.deviceName) devices.set(data.device, { name: data.deviceName });
   r.shards.forEach(sh => Local.dirty.add(sh)); Local.schedule(); saveMeta(); scheduleRender(); refreshEditorAfterSync(r.texts);
   DirectSync.resync();
-  toast(added || updated || removed ? `Imported ${source}: ${added} new, ${updated} updated${removed ? `, ${removed} deleted` : ''}${review ? `, ${review} to review` : ''}.` : `Nothing new in ${source}. You\u2019re already up to date.`);
+  const parts = [];
+  // From a backup, a jot missing here may be new or may have been deleted forever; either way it was added.
+  if (backup && added + back) parts.push(`${added + back} added`);
+  else if (added) parts.push(`${added} new`);
+  if (updated) parts.push(`${updated} updated`);
+  if (removed) parts.push(`${removed} deleted`);
+  if (review) parts.push(`${review} to review`);
+  const trashNote = inTrash.length ? ` ${plural(inTrash.length, 'jot', 'jots')} from the file ${inTrash.length === 1 ? 'is' : 'are'} in Recently deleted here.` : '';
+  const msg = (parts.length ? `Imported ${source}: ${parts.join(', ')}.` : `Nothing new in ${source}.`) + trashNote;
+  if (inTrash.length) toast(msg, inTrash.length === 1 ? 'Restore it' : `Restore ${inTrash.length.toLocaleString()}`, () => restoreItems(inTrash), 15000);
+  else toast(parts.length ? msg : `Nothing new in ${source}. You\u2019re already up to date.`);
 }
 
 // If a jot you're looking at changes because of another device, show the new text without losing your place.
@@ -2174,16 +2210,59 @@ function completePicked() {
     scheduleRender(); if (state.sel) renderEditor();
   });
 }
+// ---------- delete forever ----------
+// Deleting forever wipes a jot's text, tags and everything else from this device.
+//   * Not paired: the record is removed completely, as if the jot had never been here.
+//   * Paired: only a bare marker stays (the jot's id and when it was deleted, no content), so a paired
+//     device that was offline can't push its old copy back in through sync.
+// Either way, importing a backup file brings the jot back (see importText): a marker never blocks an import.
 function toStub(it) {
   const st = stubOf(it);
   for (const k of Object.keys(it)) if (!(k in st)) delete it[k];
   Object.assign(it, st); it.autoTags = []; indexItem(it); primeShadow(it); markDirty(it.shard);
 }
-function purgeDeleted(all) {
-  const cut = Date.now() - RECENT_DAYS * 864e5; let n = 0;
-  for (const it of S.items.values()) if (it.deleted && !it.stub && (all || (stampTime(it.v && it.v.deleted) || it.updatedAt || 0) < cut)) { toStub(it); n++; }
-  if (n) { Local.schedule(); scheduleRender(); }
+function dropItem(it) {
+  if (S.items.get(it.id) !== it) return;
+  const n = S.num.get(it.id);
+  if (n !== undefined) {  // clear it out of the search index; its slot number is simply never reused
+    for (const g of trigrams(S.hay[n] || '')) { const set = S.tri.get(g); if (set) set.delete(n); }
+    S.hay[n] = ''; S.tg[n] = []; S.ids[n] = null; S.num.delete(it.id);
+  }
+  const sh = S.byShard.get(it.shard); if (sh) sh.delete(it.id);
+  S.items.delete(it.id); shadow.delete(it.id); digestCache.delete(it.id); clearTimeout(justDone.get(it.id)); justDone.delete(it.id);
+  state.picked.delete(it.id);
+  markDirty(it.shard);
+}
+function forgetItems(items) {
+  const keepMarker = DirectSync.paired(); let n = 0;
+  for (const it of items) {
+    if (!it || !it.deleted) continue;
+    if (!it.stub) n++;
+    if (keepMarker) { if (!it.stub) toStub(it); } else dropItem(it);
+  }
+  if (state.sel && !S.items.get(state.sel)) closeEditor();
+  Local.schedule(); scheduleRender();
   return n;
+}
+// On launch: jots in Recently deleted longer than RECENT_DAYS are deleted forever. On a device that isn't
+// paired, leftover markers are cleared out too (there's no other device for them to protect against).
+function purgeDeleted() {
+  const cut = Date.now() - RECENT_DAYS * 864e5;
+  const old = [...S.items.values()].filter(it => it.deleted && (it.stub ? !DirectSync.paired() : (stampTime(it.v && it.v.deleted) || it.updatedAt || 0) < cut));
+  return old.length ? forgetItems(old) : 0;
+}
+// Two taps for anything that can't be undone: the first arms the button, the second (within 4 s) acts.
+function armed(key) {
+  if (state.armed === key) { state.armed = null; return true; }
+  state.armed = key; scheduleRender();
+  clearTimeout(armed.t); armed.t = setTimeout(() => { if (state.armed === key) { state.armed = null; scheduleRender(); } }, 4000);
+  return false;
+}
+function deleteForever(items, label) {
+  items = items.filter(it => it && it.deleted && !it.stub);
+  if (!items.length) return;
+  const n = forgetItems(items); buzz(20);
+  toast(`Deleted ${label || plural(n, 'jot', 'jots')} forever. ${n === 1 ? 'It' : 'They'} can come back only by importing a backup that has ${n === 1 ? 'it' : 'them'}.`);
 }
 function restoreItems(items) {
   items = items.filter(it => it && it.deleted);
@@ -2203,7 +2282,8 @@ function renderSelbar() {
   bar.hidden = false;
   bar.innerHTML = `<label><input type="checkbox" id="selAll" ${all ? 'checked' : ''}> Select all (${n.toLocaleString()})</label>
     <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span>
-    ${state.view === 'trash' ? `<button class="btn-ok" data-selact="restore" ${k ? '' : 'disabled'}>Restore</button>` : `<button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
+    ${state.view === 'trash' ? `<button class="btn-ok" data-selact="restore" ${k ? '' : 'disabled'}>Restore</button>
+    <button class="btn-danger" data-selact="forget" ${k ? '' : 'disabled'}>${state.armed === 'sel' ? `Delete ${k.toLocaleString()} forever? Select again` : 'Delete forever'}</button>` : `<button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
     <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>`}
     <button class="ghost" data-selact="cancel">Cancel</button>`;
   $('#selAll').indeterminate = k > 0 && !all;
@@ -2448,8 +2528,14 @@ function renderSide() {
   const td = today(), wk = addDays(td, 7);
   const c = { all: 0, notes: 0, tasks: 0, today: 0, upcoming: 0, overdue: 0, done: 0, trash: 0 };
   const tagc = new Map();
+  const inTrash = state.view === 'trash';
   for (const it of S.items.values()) {
-    if (it.deleted) { if (!it.stub) c.trash++; continue; }
+    if (it.deleted) {
+      if (it.stub) continue;
+      c.trash++;
+      if (inTrash) for (const t of (S.tg[S.num.get(it.id)] || [])) tagc.set(t, (tagc.get(t) || 0) + 1);
+      continue;
+    }
     c.all++;
     if (it.type !== 'task') c.notes++;
     else if (it.done) c.done++;
@@ -2457,7 +2543,7 @@ function renderSide() {
       c.tasks++;
       if (it.due) { if (it.due <= td) c.today++; if (it.due < td) c.overdue++; if (it.due >= td && it.due <= wk) c.upcoming++; }
     }
-    for (const t of (S.tg[S.num.get(it.id)] || [])) tagc.set(t, (tagc.get(t) || 0) + 1);
+    if (!inTrash) for (const t of (S.tg[S.num.get(it.id)] || [])) tagc.set(t, (tagc.get(t) || 0) + 1);
   }
   const openN = c.tasks, doneN = c.done;
   const so = document.querySelector('#statusSeg [data-s="open"] .n'), sd = document.querySelector('#statusSeg [data-s="done"] .n');
@@ -2473,7 +2559,7 @@ function renderSide() {
   $('#q').placeholder = isPhone() ? `Search ${vl}` : 'Search words, #tags, p:high, due:week';
   $('#tags').innerHTML = tags.length ? tags.map(([t, n]) =>
     `<button data-tag="${esc(t)}" class="${state.tags.has(t) ? 'on' : ''}" aria-pressed="${state.tags.has(t)}">#${esc(t)}<span class="c">${n}</span></button>`).join('')
-    : '<span style="font-size:12px;color:var(--faint);padding:0 4px">Tags appear as you jot. Type #something.</span>';
+    : `<span style="font-size:12px;color:var(--faint);padding:0 4px">${inTrash ? 'No tags on deleted jots.' : 'Tags appear as you jot. Type #something.'}</span>`;
 }
 
 function hl(text, terms) {
@@ -2509,7 +2595,7 @@ function rowHTML(it, terms, td) {
   return `<div class="item ${state.sel === it.id && !state.selMode ? 'sel' : ''} ${picked ? 'picked' : ''} ${it.done ? 'isdone' : ''} ${pending ? 'justdone' : ''}" role="listitem" data-id="${esc(it.id)}">
     ${lead || (trash ? '<span class="notemark" aria-hidden="true"></span>' : isTask ? `<button class="check p${it.priority} ${it.done ? 'done' : ''}" role="checkbox" aria-checked="${it.done}" data-act="done" aria-label="${it.done ? 'Reopen' : 'Complete'} ${esc(title)}">${it.done ? CHECK : ''}</button>` : '<span class="notemark" aria-hidden="true"></span>')}
     <div><div class="t">${hl(title, terms)}</div>${snippet ? `<div class="s">${hl(snippet, terms)}</div>` : ''}${trash ? '' : clHTML}${meta.length ? `<div class="m">${meta.join('')}</div>` : ''}</div>
-    <div class="acts"><span class="when">${when}</span>${trash && !state.selMode ? '<button class="mini restore" data-act="restore">Restore</button>' : ''}<div class="quick" ${trash ? 'hidden' : ''}><button class="mini" data-act="toggle">${isTask ? 'Make note' : 'Make task'}</button><button class="mini" data-act="del">Delete</button></div></div>
+    <div class="acts"><span class="when">${when}</span>${trash && !state.selMode ? `<button class="mini restore" data-act="restore">Restore</button><button class="mini danger" data-act="forget">${state.armed === 'row:' + it.id ? 'Delete forever?' : 'Delete forever'}</button>` : ''}<div class="quick" ${trash ? 'hidden' : ''}><button class="mini" data-act="toggle">${isTask ? 'Make note' : 'Make task'}</button><button class="mini" data-act="del">Delete</button></div></div>
   </div>`;
 }
 
@@ -2580,8 +2666,8 @@ function renderList() {
   if (!res.length) {
     const total = [...S.items.values()].filter(i => !i.deleted).length;
     const filtered = state.q || state.tags.size || state.prios.size || state.due || state.view !== 'all';
-    list.innerHTML = `<div class="empty">${state.view === 'trash' && !state.q
-      ? `<p>Nothing in Recently deleted.</p><p>When you delete a jot it waits here for ${RECENT_DAYS} days, so you can restore it on all your devices.</p>`
+    list.innerHTML = `<div class="empty">${state.view === 'trash' && !state.q && !state.tags.size
+      ? `<p>Nothing in Recently deleted.</p><p>When you delete a jot it waits here for ${RECENT_DAYS} days, so you can restore it on all your devices, or delete it forever sooner.</p>`
       : !total
       ? '<p>Nothing here yet.</p><p>Start typing in the jot box. Every jot is saved as you type.</p>'
       : filtered ? '<p>No matches for these filters.</p><p><button class="ghost" data-clear>Clear search and filters</button></p>'
@@ -2598,7 +2684,17 @@ function renderList() {
   const nudge = Q.terms.length && !Q.sort && state.sortT.key !== 'relevance' ? '<button class="linkbtn" data-preset="match">Sort by best match</button>' : '';
   renderSelbar();
   if (state.view === 'trash') {
-    $('#stats').innerHTML = `<span>${plural(res.length, 'deleted jot', 'deleted jots')}</span>${res.length && !state.selMode ? `<button class="mini" data-select>Select</button><button class="mini" data-restore-all>Restore all</button><button class="mini danger" data-empty-trash>${state.emptyArmed ? 'Empty for good? Select again' : 'Empty'}</button>` : ''}<span class="faint">Kept for ${RECENT_DAYS} days. Restoring brings a jot back on all your devices.</span>`;
+    // Restore by tag: pick one or more tags (here or in the sidebar), then Restore acts on just those jots.
+    const tagc = new Map();
+    for (const x of S.items.values()) if (x.deleted && !x.stub) for (const t of (S.tg[S.num.get(x.id)] || [])) tagc.set(t, (tagc.get(t) || 0) + 1);
+    const tagBtns = [...tagc.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 24)
+      .map(([t, n]) => `<button class="mini tagpick ${state.tags.has(t) ? 'on' : ''}" data-trashtag="${esc(t)}" aria-pressed="${state.tags.has(t)}">#${esc(t)} <span class="faint">${n}</span></button>`).join('');
+    const filtered = !!(state.q || state.tags.size || state.prios.size || state.weights.size || state.due || state.status !== 'all');
+    const what = filtered ? plural(res.length, 'jot', 'jots') : 'all';
+    const acts = res.length && !state.selMode ? `<button class="mini" data-select>Select</button><button class="mini" data-restore-all>Restore ${what}</button><button class="mini danger" data-forget-all>${state.armed === 'all' ? `Delete ${what} forever? Select again` : `Delete ${what} forever`}</button>` : '';
+    $('#stats').innerHTML = `<span>${plural(res.length, 'deleted jot', 'deleted jots')}</span>${acts}${chips}${filtered ? '<button class="mini" data-clear-trash>Clear filters</button>' : ''}`
+      + (tagBtns ? `<div class="trashtags"><span class="faint">Restore by tag:</span>${tagBtns}</div>` : '')
+      + `<span class="faint">Kept for ${RECENT_DAYS} days, then deleted forever. Restoring brings a jot back on all your devices.</span>`;
     return;
   }
   $('#stats').innerHTML = `<span>${res.length.toLocaleString()} ${res.length === 1 ? 'item' : 'items'}</span>${!state.selMode && res.length ? '<button class="mini" data-select>Select</button>' : ''}<span class="st-time">searched ${total.toLocaleString()} in ${ms < 1 ? ms.toFixed(2) : ms.toFixed(1)} ms</span><button class="linkbtn subtle st-sort" data-opensort>${esc(sortSummary(Q))}</button>${confBtn}${nudge}${chips}${anyFilter ? '<button class="mini" data-clear>Clear filters</button>' : ''}`;
@@ -2881,7 +2977,7 @@ function reminderPreset(it, kind) {
   touch(it); renderEditor();
 }
 
-// ---------- sample data + stress test ----------
+// ---------- sample data ----------
 function seed() {
   const D = 864e5, now = Date.now();
   const rows = [
@@ -2908,28 +3004,6 @@ function seed() {
     it.autoTags = computeAutoTags(it);
     S.items.set(it.id, it); indexItem(it); markDirty(it.shard);
   });
-}
-
-function stress() {
-  const words = 'alpha budget client deploy design draft email follow invoice meeting notes plan project quarterly release research review roadmap sprint strategy team timeline travel update vendor weekly acme globex initech hooli search index shard latency cache token drive backup garden recipe coffee book flight hotel dentist gym laundry groceries'.split(' ');
-  const t0 = performance.now(), now = Date.now(), touched = new Set();
-  for (let i = 0; i < 10000; i++) {
-    const created = now - Math.floor(Math.random() * 730 * 864e5);
-    const n = 5 + Math.floor(Math.random() * 12), txt = [];
-    for (let j = 0; j < n; j++) txt.push(words[Math.floor(Math.random() * words.length)]);
-    const isTask = Math.random() < 0.35, done = isTask && Math.random() < 0.3;
-    const it = newItem({
-      createdAt: created, updatedAt: created, text: txt.join(' '), type: isTask ? 'task' : 'note',
-      priority: isTask ? Math.floor(Math.random() * 4) : 0, weight: isTask && Math.random() < 0.5 ? 1 + Math.floor(Math.random() * 5) : 0,
-      due: isTask && Math.random() < 0.6 ? addDays(null, Math.floor(Math.random() * 40) - 10) : null, done, doneAt: done ? created : null
-    });
-    stampChanges(it); it.autoTags = computeAutoTags(it);
-    S.items.set(it.id, it); indexItem(it); touched.add(it.shard);
-  }
-  const ms = performance.now() - t0;
-  touched.forEach(markDirty); DirectSync.resync();
-  scheduleRender();
-  toast(`Added and indexed 10,000 jots in ${Math.round(ms)} ms. Try searching now.`);
 }
 
 // ---------- event wiring ----------
@@ -3065,10 +3139,10 @@ function bindUI() {
     if (e.target.closest('[data-opensort]')) { e.stopPropagation(); openSort(); }
     if (e.target.closest('[data-select]')) enterSelect();
     if (e.target.closest('[data-restore-all]')) restoreItems(state.allIds.map(id => S.items.get(id)));
-    if (e.target.closest('[data-empty-trash]')) {
-      if (!state.emptyArmed) { state.emptyArmed = true; scheduleRender(); setTimeout(() => { state.emptyArmed = false; scheduleRender(); }, 4000); }
-      else { state.emptyArmed = false; const n = purgeDeleted(true); toast(`Emptied ${plural(n, 'deleted jot', 'deleted jots')}. They can\u2019t be restored now.`); }
-    }
+    if (e.target.closest('[data-forget-all]') && armed('all')) deleteForever(state.allIds.map(id => S.items.get(id)));
+    const tt = e.target.closest('[data-trashtag]');
+    if (tt) { const t = tt.dataset.trashtag; state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); state.armed = null; scheduleRender(); }
+    if (e.target.closest('[data-clear-trash]')) { state.q = ''; $('#q').value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.status = 'all'; state.armed = null; saveUI(); scheduleRender(); }
     if (e.target.closest('[data-conflicts]')) { state.q = 'is:conflict'; $('#q').value = 'is:conflict'; state.view = 'all'; scheduleRender(); }
   });
 
@@ -3087,8 +3161,9 @@ function bindUI() {
     const row = e.target.closest('.item'); if (!row) return;
     const it = S.items.get(row.dataset.id); if (!it) return;
     if (state.selMode) { e.preventDefault(); return togglePick(it.id, e.shiftKey); }
-    if (it.deleted) { // Recently deleted: only Restore does anything
+    if (it.deleted) { // Recently deleted: only Restore and Delete forever do anything
       if (e.target.closest('[data-act="restore"]')) { e.stopPropagation(); restoreItems([it]); }
+      else if (e.target.closest('[data-act="forget"]')) { e.stopPropagation(); if (armed('row:' + it.id)) deleteForever([it]); }
       else toast('Restore this jot to open it.', 'Restore', () => restoreItems([it]));
       return;
     }
@@ -3111,6 +3186,7 @@ function bindUI() {
     if (b.dataset.selact === 'delete') deletePicked();
     if (b.dataset.selact === 'complete') completePicked();
     if (b.dataset.selact === 'restore') { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); restoreItems(items); }
+    if (b.dataset.selact === 'forget' && armed('sel')) { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); deleteForever(items); }
     if (b.dataset.selact === 'cancel') exitSelect();
   });
   bindResizers();
@@ -3274,7 +3350,6 @@ function bindUI() {
     try { await importText(await file.text(), `\u201c${file.name}\u201d`); } catch (err) { toast('Couldn\u2019t read that file.'); }
     e.target.value = '';
   });
-  $('#stressBtn').addEventListener('click', () => { closeSettings(); setTimeout(stress, 30); });
   let resetArmed = false;
   $('#resetBtn').addEventListener('click', async e => {
     const local = [...S.items.values()].filter(i => !i.deleted).length;
@@ -3436,7 +3511,7 @@ async function init() {
   if (justReset) { history.replaceState(null, '', location.pathname); meta.seeded = true; setTimeout(() => toast('This device was reset. It\u2019s empty and unpaired.'), 300); }
   const joining = /[#&]pair=/.test(location.hash);  // opened from a pairing link: your notes are on their way, no samples
   if (!meta.seeded && S.items.size === 0 && !joining) seed();
-  purgeDeleted(false);
+  purgeDeleted();
   meta.seeded = true; saveMeta();
   bindUI(); renderParse(null); renderSortPanel(); render(); renderSync();
   await DirectSync.start();

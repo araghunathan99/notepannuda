@@ -15,6 +15,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Auto-tags:** keyword rules tag jots for you.
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
+- **Recently deleted:** restore all, by tag, or one by one, or delete forever right away instead of waiting 30 days.
 - **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**) or **Delete**, and Undo if you change your mind.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
 - **Notifications:** when another device connects, a daily summary of tasks due (at a time you choose), and task reminders. Turn them on in Settings. On a Mac keep the app open (minimized is fine); on Android they arrive while the app is open or recently used, plus an optional background check in Chrome.
@@ -103,7 +104,21 @@ Changing your GitHub username or the repository name changes the address, and a 
 
 ## Back up
 
-Your notes exist only on your devices. Now and then, use **Export file** (or **Send changes** to your own Drive) to keep a copy somewhere safe. Importing a file merges it using the same rules as sync, so importing an older or repeated file never loses anything.
+Your notes exist only on your devices. Now and then, use **Export file** to keep a copy somewhere safe.
+
+Importing a backup (a file made with **Export file**) is a restore, not a sync:
+
+- A jot in the file that's missing here, or was **deleted forever** here, comes back as a normal jot, on all your paired devices.
+- A jot in the file that's still in **Recently deleted** here stays there, and the import offers to restore it in one tap.
+- Everything else merges field by field, so importing an older or repeated file never loses anything.
+
+A **Send changes** file is different: it's sync by hand, so it carries deletions and merges with the sync rules.
+
+## Deleting
+
+- **Delete** moves a jot to **Recently deleted** on all your devices. It waits there for 30 days.
+- In **Recently deleted**, restore everything, restore just the jots with certain tags (tap tags under **Restore by tag**, or in the sidebar, then **Restore**), or select jots one by one.
+- **Delete forever** (on a jot, on a selection, or on everything shown) erases the text right away instead of waiting 30 days. On a device that isn't paired, the jot is removed completely. On a paired device, only its ID and deletion time are kept, with no content, so an offline device can't sync its old copy back. Either way, importing a backup that has the jot brings it back.
 
 ## Troubleshooting
 
