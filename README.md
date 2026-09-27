@@ -15,6 +15,8 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Auto-tags:** keyword rules tag jots for you.
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
+- **Invite someone:** send the app's link from Settings (share sheet, copied link, or QR code). It's just the app, never your notes.
+- **Share jots with someone:** search or filter, select the jots, choose **Share…**, and send the file by email, Slack, WhatsApp, or anything in the share sheet. They import it into their own NotePannuda. Your devices never pair or sync; see [Share with someone](#share-with-someone).
 - **Recently deleted:** restore all, by tag, or one by one, or delete forever right away instead of waiting 30 days.
 - **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**), **Clear tags** (one tag or all of them), or **Delete**, and Undo if you change your mind. To remove a tag everywhere, tap it in the sidebar, choose **Select all**, then **Clear tags**.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
@@ -113,6 +115,31 @@ Importing a backup (a file made with **Export file**) is a restore, not a sync:
 - Everything else merges field by field, so importing an older or repeated file never loses anything.
 
 A **Send changes** file is different: it's sync by hand, so it carries deletions and merges with the sync rules.
+
+## Invite someone
+
+To get someone else started with their own copy, open **Settings**, then **Invite someone**:
+
+- **Send invite…** opens the share sheet with a short message, install tips, and the app's link. If the browser has no share sheet (some Mac browsers), the invite is copied so you can paste it anywhere.
+- **Copy link** copies just the link.
+- **Show QR code** shows a code to scan with a phone camera, handy in person.
+
+An invite is only the app. It carries none of your notes and doesn't pair their device with yours. Afterwards you can [share jots](#share-with-someone) with them.
+
+## Share with someone
+
+Sharing sends a few jots to another person. It isn't pairing: their app and yours never sync, and they get only what you picked.
+
+1. Find the jots: search, pick a view, or tap tags to filter.
+2. Choose **Select** (or Cmd/Ctrl-click, or long-press on a phone), then pick jots, or **Select all** to take everything the search found.
+3. Choose **Share…** in the selection bar. For a single open jot, **Share…** is also at the bottom of the editor.
+4. Pick where to send it: email, Slack, WhatsApp, Messages, and so on. If the browser can't share files (some Mac browsers), the file is saved to your downloads to attach yourself.
+
+**What's in the file:** the text, tags (including auto-tags, so they see the same tags you do), note or task, priority, weight, due date, and whether it's completed. Reminders stay with you, as do your device name, auto-tag rules, and anything you didn't select.
+
+**To receive:** on Android, tap the file in the message, choose share, then NotePannuda (or save it and use **Import file**). On a Mac, drop the file onto the NotePannuda window, or use **Settings**, **Import file**. The message offers **Show them** to list just the jots that arrived.
+
+**Sharing again:** if you edit a jot and share it again, their copy updates instead of doubling. If you both edited it, both versions are kept and it's marked **Edited on 2 devices**, like any conflict. If they deleted it, the new share brings it back, following the same rules as importing a backup.
 
 ## Deleting
 

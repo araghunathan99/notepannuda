@@ -270,6 +270,8 @@ body.resizing *{cursor:col-resize!important}
 .selbar label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
 .selbar input{width:18px;height:18px;margin:0}
 .selbar .grow{flex:1;color:var(--graphite)}
+.ed-foot-acts{display:flex;gap:8px}
+body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2px dashed var(--accent);border-radius:14px;background:color-mix(in srgb,var(--accent-soft) 70%,transparent);display:grid;place-items:center;font-size:18px;font-weight:600;color:var(--accent);z-index:999;pointer-events:none}
 .seltags{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .btn-danger{border:0;background:var(--high);color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600}
 .btn-danger:disabled{opacity:.45;cursor:default}
@@ -537,6 +539,16 @@ body.resizing *{cursor:col-resize!important}
       <label class="ghost" style="cursor:pointer">Import file<input type="file" id="importIn" accept=".json,.txt,application/json,text/plain" hidden></label>
     </div>
 
+    <h4>Invite someone</h4>
+    <p>Send a link to NotePannuda so someone else can install their own copy. It's just the app: none of your notes go with it, and it doesn't pair their device with yours. Once they have it, you can share jots with them.</p>
+    <div class="actions">
+      <button class="primary" id="inviteBtn">Send invite&#x2026;</button>
+      <button class="ghost" id="inviteCopyBtn">Copy link</button>
+      <button class="ghost" id="inviteQrBtn" aria-expanded="false">Show QR code</button>
+    </div>
+    <div id="inviteQr" class="pair-panel" hidden></div>
+    <p class="faint" id="inviteNote" hidden></p>
+
     <h4>Notifications</h4>
     <p>Get a note when another device connects and a daily summary of tasks due. On a Mac, keep NotePannuda open (minimized is fine) and alerts arrive as normal notifications. On a phone, they arrive while the app is open or recently used; Android pauses web apps in the background, so a due alert may wait until you next open it.</p>
     <div id="notifyCard"></div>
@@ -561,6 +573,7 @@ body.resizing *{cursor:col-resize!important}
       <button class="ghost danger" id="wipeBtn">Delete everything</button>
       <button class="ghost danger" id="resetBtn">Reset this device</button>
     </div>
+    <p class="faint"><strong>Share with someone:</strong> select jots (search or filter first to narrow them down), then choose <strong>Share&#x2026;</strong>, or use <strong>Share&#x2026;</strong> in an open jot. They get a file to import into their own NotePannuda: on Android, share the file to NotePannuda; on a computer, drop it onto the window or use <strong>Import file</strong>. Only those jots go, without reminders, and your devices stay unpaired. Sharing an updated version later updates their copy.</p>
     <p class="faint"><strong>Export file</strong> saves your notes as a backup (deleted jots are left out). Importing a backup restores what's in it: jots deleted forever come back, and jots still in Recently deleted stay there until you restore them (the import offers to). <strong>Send changes</strong> is sync by file: it also carries deletions, so importing it on another device removes what you deleted here.</p>
     <p class="faint"><strong>Delete everything</strong> deletes your jots on this device and on all paired devices (you can undo it, or restore from Recently deleted). <strong>Reset this device</strong> unpairs this device and erases NotePannuda from it only; your other devices keep everything, and pairing again copies it all back.</p>
 
@@ -779,7 +792,7 @@ const ser = it => { const { autoTags, ...rest } = it; return rest; };
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: { deleted: (it.v && it.v.deleted) || '' }, tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: { deleted: (it.v && it.v.deleted) || '' } } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-27.3';
+const APP_VERSION = '2026-09-27.5';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -942,6 +955,7 @@ function runSearch() {
   const iter = cand ? [...cand].map(n => S.items.get(S.ids[n])) : S.items.values();
   for (const it of iter) {
     if (!it || !!it.deleted !== (state.view === 'trash') || it.stub) continue; // Recently deleted shows deleted jots that still have their text
+    if (state.idFilter && !state.idFilter.has(it.id)) continue;             // "Show them" after an import
     const h = S.hay[S.num.get(it.id)];
     if (Q.terms.length && !Q.terms.every(t => h.includes(t))) continue;
     if (Q.neg.length && Q.neg.some(t => h.includes(t))) continue;
@@ -1985,21 +1999,83 @@ function downloadText(text, name) {
   a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
-async function sendChanges() {
-  const json = JSON.stringify(buildExport());
+// Hands a JSON file to the system share sheet (Android, and Mac where the browser supports it), or saves it
+// to downloads if the browser can't share files. Returns 'shared', 'cancelled', 'failed' or 'downloaded'.
+// Call it straight from a tap or click: browsers only open the share sheet in response to one.
+async function shareJSON(json, base, title, text) {
   // Android's share sheet accepts only some file types; if .json isn't allowed, the same JSON goes as .json.txt.
-  const files = [new File([json], exportName('json'), { type: 'application/json' }), new File([json], exportName('json.txt'), { type: 'text/plain' })];
+  const files = [new File([json], base + '.json', { type: 'application/json' }), new File([json], base + '.json.txt', { type: 'text/plain' })];
   if (navigator.share && navigator.canShare) {
     for (const f of files) {
       let ok = false; try { ok = navigator.canShare({ files: [f] }); } catch (e) { }
       if (!ok) continue;
-      try { await navigator.share({ files: [f], title: 'NotePannuda changes', text: 'Import this file in NotePannuda on your other device.' }); meta.lastExportAt = Date.now(); saveMeta(); }
-      catch (e) { if (e.name !== 'AbortError') toast('Sharing didn\u2019t work. Use Export file instead.'); }
-      return;
+      try { await navigator.share({ files: [f], title, text }); return 'shared'; }
+      catch (e) { return e.name === 'AbortError' ? 'cancelled' : 'failed'; }
     }
   }
-  downloadText(json, exportName('json'));
-  toast('This browser can\u2019t share files, so the file was saved to your downloads instead.');
+  downloadText(json, base + '.json');
+  return 'downloaded';
+}
+async function sendChanges() {
+  const r = await shareJSON(JSON.stringify(buildExport()), exportName('json').replace(/\.json$/, ''), 'NotePannuda changes', 'Import this file in NotePannuda on your other device.');
+  if (r === 'shared') { meta.lastExportAt = Date.now(); saveMeta(); }
+  if (r === 'failed') toast('Sharing didn\u2019t work. Use Export file instead.');
+  if (r === 'downloaded') toast('This browser can\u2019t share files, so the file was saved to your downloads instead.');
+}
+
+// ---------- inviting someone to the app ----------
+// The app's own address, with nothing personal on it (no pairing code, no search, no shared text).
+const appLink = () => /^https?:$/.test(location.protocol) ? `${location.origin}${location.pathname.replace(/(index\.html)?$/, m => m ? 'notepannuda.html' : '')}` : '';
+const inviteText = () => 'Try NotePannuda: fast notes and tasks that stay on your own device, no account needed. Open the link, then install it: in Chrome on Android, menu, then Add to home screen; on a Mac, the install icon in Chrome\u2019s address bar, or File, then Add to Dock in Safari.';
+async function copyInvite(withText) {
+  const url = appLink(); if (!url) return false;
+  try { await navigator.clipboard.writeText(withText ? `${inviteText()}\n${url}` : url); return true; } catch (e) { return false; }
+}
+async function sendInvite() {
+  const url = appLink();
+  if (!url) { toast('Invites work once NotePannuda is published at its web address.'); return; }
+  if (navigator.share) {
+    try { await navigator.share({ title: 'NotePannuda', text: inviteText(), url }); toast('Invite sent.'); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  // No share sheet here (some Mac browsers): put the invite on the clipboard to paste into any message.
+  if (await copyInvite(true)) toast('Invite copied. Paste it into an email or message.', '', null, 7000);
+  else toast(url, '', null, 12000);
+}
+
+// ---------- sharing jots with someone else ----------
+// A share file carries just the chosen jots, for another person to import into their own NotePannuda.
+// It isn't pairing: nothing else is shared and the two apps never sync. What goes in each jot:
+//   * its text, tags (auto-tags included as plain tags, so they see what you see), note or task,
+//     priority, weight, due date, completed state, and when it was created and last edited;
+//   * its change stamps, so if you share an updated version later it updates their copy (and edits you
+//     both made are kept side by side, never lost), instead of adding a duplicate.
+// Left out: reminders (they're personal), which auto-tags you switched off, other versions kept from a
+// conflict, your device name, your auto-tag rules, and everything you didn't select.
+// Blanked fields get the oldest possible stamp, so if the jot is ever shared back, your own value still wins.
+const SHARE_LOW = '000000000000000.00000.share';
+function shareRecord(it) {
+  ensureStamps(it);
+  const x = JSON.parse(JSON.stringify(ser(it)));
+  delete x.stub; x.conflicts = {};
+  x.tags = [...new Set([...(it.tags || []), ...(it.autoTags || [])])];
+  x.mutedAuto = []; x.v.mutedAuto = SHARE_LOW;
+  x.remindAt = null; x.reminded = false; x.v.remindAt = SHARE_LOW; x.v.reminded = SHARE_LOW;
+  if (/^sample-/.test(x.id)) x.id = `shared-${DEVICE}-${x.id}`; // everyone has the sample jots under the same ids
+  return x;
+}
+const buildShare = items => ({ app: APP_TAG, kind: 'notepannuda-share', schema: 2, sharedAt: new Date().toISOString(), items: items.map(shareRecord) });
+async function shareItems(items, done) {
+  items = items.filter(it => it && !it.deleted && !it.stub);
+  if (!items.length) return;
+  const n = items.length, what = plural(n, 'jot', 'jots');
+  const first = splitText(items[0].text).title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+  const base = `notepannuda-share-${n === 1 && first ? first : n + '-jots'}-${ymd(new Date())}`;
+  const r = await shareJSON(JSON.stringify(buildShare(items)), base, n === 1 ? splitText(items[0].text).title || 'A jot from NotePannuda' : `${what} from NotePannuda`,
+    `${n === 1 ? 'A jot' : what} from NotePannuda. To add ${n === 1 ? 'it' : 'them'}: share this file to NotePannuda on Android, or drop it onto the NotePannuda window (or use Settings, Import file) on a computer.`);
+  if (r === 'shared') { toast(`Shared ${what}.`); if (done) done(); }
+  if (r === 'failed') toast('Sharing didn\u2019t work. Try again, or pick another app to share with.');
+  if (r === 'downloaded') { toast(`Saved ${what} as a file in your downloads. Attach it to an email or message to share it.`, '', null, 8000); if (done) done(); }
 }
 function exportFile() {
   const data = buildExport(); data.items = data.items.filter(i => !i.deleted); data.backup = true;
@@ -2013,11 +2089,19 @@ function exportFile() {
 //     A jot that's still in Recently deleted here stays there (it's recoverable anyway): the toast offers
 //     to restore those in one tap. Everything else merges field by field as usual, so nothing is lost.
 //   * A Send changes file is sync by hand: it merges with the sync rules, including its deletions.
+// Show just a given set of jots (the ones an import brought in), as a filter you can clear like any other.
+function showOnly(ids) {
+  state.idFilter = new Set(ids); state.view = 'all'; state.q = ''; $('#q').value = ''; state.tags.clear();
+  state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.status = 'all';
+  if (isPhone() && state.sel) closeEditor();
+  scheduleRender();
+}
 async function importText(text, source) {
   let data; try { data = JSON.parse(text); } catch (e) { toast('That file isn\u2019t a NotePannuda file.'); return; }
   const items = Array.isArray(data) ? data : Array.isArray(data && data.items) ? data.items : null;
   if (!items) { toast('That file isn\u2019t a NotePannuda file.'); return; }
   const backup = Array.isArray(data) || data.backup === true || data.kind !== 'notepannuda-sync';
+  if (data.kind === 'notepannuda-share') source = 'shared jots';   // someone else's jots: a subset, merged like a backup
   const before = new Map([...S.items.values()].map(it => [it.id, canon(it)])), wasLive = new Set([...S.items.values()].filter(it => !it.deleted).map(it => it.id));
   const hadConflict = new Set([...S.items.values()].filter(it => openConflicts(it).length).map(it => it.id));
   const live = items.filter(x => x && x.id && !x.deleted && !x.stub);
@@ -2056,7 +2140,9 @@ async function importText(text, source) {
   if (review) parts.push(`${review} to review`);
   const trashNote = inTrash.length ? ` ${plural(inTrash.length, 'jot', 'jots')} from the file ${inTrash.length === 1 ? 'is' : 'are'} in Recently deleted here.` : '';
   const msg = (parts.length ? `Imported ${source}: ${parts.join(', ')}.` : `Nothing new in ${source}.`) + trashNote;
+  const got = live.map(x => x.id).filter(id => { const it = S.items.get(id); return it && !it.deleted; });
   if (inTrash.length) toast(msg, inTrash.length === 1 ? 'Restore it' : `Restore ${inTrash.length.toLocaleString()}`, () => restoreItems(inTrash), 15000);
+  else if (data.kind === 'notepannuda-share' && got.length) toast(parts.length ? msg : `Already have ${got.length === 1 ? 'this jot' : 'these jots'}, no changes.`, got.length === 1 ? 'Show it' : 'Show them', () => showOnly(got), 15000);
   else toast(parts.length ? msg : `Nothing new in ${source}. You\u2019re already up to date.`);
 }
 
@@ -2335,6 +2421,7 @@ function renderSelbar() {
     <span class="grow" aria-live="polite">${k.toLocaleString()} selected</span>
     ${state.view === 'trash' ? `<button class="btn-ok" data-selact="restore" ${k ? '' : 'disabled'}>Restore</button>
     <button class="btn-danger" data-selact="forget" ${k ? '' : 'disabled'}>${state.armed === 'sel' ? `Delete ${k.toLocaleString()} forever? Select again` : 'Delete forever'}</button>` : `<button class="btn-ok" data-selact="complete" ${tasks.length ? '' : 'disabled'} title="${tasks.length ? '' : 'Select at least one task'}">${doneLabel}</button>
+    <button class="ghost" data-selact="share" ${k ? '' : 'disabled'}>Share&#x2026;</button>
     <button class="ghost" data-selact="tags" ${k ? '' : 'disabled'} aria-expanded="${!!state.tagMenu}">Clear tags</button>
     <button class="btn-danger" data-selact="delete" ${k ? '' : 'disabled'}>${state.delArmed ? `Delete ${k.toLocaleString()}? Select again` : 'Delete'}</button>`}
     <button class="ghost" data-selact="cancel">Cancel</button>${state.tagMenu && k && state.view !== 'trash' ? selTagMenu([...state.picked].map(id => S.items.get(id)).filter(Boolean)) : ''}`;
@@ -2562,6 +2649,7 @@ function handleLaunchParams() {
   if (!['text', 'title', 'url', 'action', 'view'].some(k => q.has(k))) return;
   history.replaceState(null, '', location.pathname);
   const title = (q.get('title') || '').trim(), text = (q.get('text') || '').trim(), url = (q.get('url') || '').trim();
+  if (/^[\[{]/.test(text) && /"notepannuda"/.test(text)) { try { JSON.parse(text); importText(text, 'the shared jots'); return; } catch (e) { } }
   if (title || text || url) {
     const parts = [title, text, url && !text.includes(url) ? url : ''].filter(Boolean);
     const it = newItem({ text: [...new Set(parts)].join('\n'), tags: ['shared'] });
@@ -2717,7 +2805,7 @@ function renderList() {
   if (state.selMode) { const keep = new Set(state.allIds); for (const id of [...state.picked]) if (!keep.has(id)) state.picked.delete(id); }
   if (!res.length) {
     const total = [...S.items.values()].filter(i => !i.deleted).length;
-    const filtered = state.q || state.tags.size || state.prios.size || state.due || state.view !== 'all';
+    const filtered = state.q || state.tags.size || state.prios.size || state.due || state.view !== 'all' || state.idFilter;
     list.innerHTML = `<div class="empty">${state.view === 'trash' && !state.q && !state.tags.size
       ? `<p>Nothing in Recently deleted.</p><p>When you delete a jot it waits here for ${RECENT_DAYS} days, so you can restore it on all your devices, or delete it forever sooner.</p>`
       : !total
@@ -2729,8 +2817,9 @@ function renderList() {
       (hidden ? `<button class="more" data-more>Show ${Math.min(200, hidden)} more of ${hidden.toLocaleString()}</button>` : '');
   }
   const total = S.items.size;
-  const chips = [...state.tags].map(t => `<span class="chip pill">#${esc(t)}<button data-untag="${esc(t)}" aria-label="Remove tag filter ${esc(t)}">\u00d7</button></span>`).join('');
-  const anyFilter = state.q || state.tags.size || state.prios.size || state.weights.size || state.due || state.status !== 'all';
+  const chips = (state.idFilter && state.view !== 'trash' ? `<span class="chip pill">Just imported (${state.idFilter.size.toLocaleString()})<button data-unids aria-label="Show everything again">\u00d7</button></span>` : '')
+    + [...state.tags].map(t => `<span class="chip pill">#${esc(t)}<button data-untag="${esc(t)}" aria-label="Remove tag filter ${esc(t)}">\u00d7</button></span>`).join('');
+  const anyFilter = state.q || state.tags.size || state.prios.size || state.weights.size || state.due || state.status !== 'all' || state.idFilter;
   let nConf = 0; for (const x of S.items.values()) if (!x.deleted && x.conflicts && openConflicts(x).length) nConf++;
   const confBtn = nConf && !Q.is.has('conflict') ? `<button class="linkbtn conflict-link" data-conflicts>${nConf} ${nConf === 1 ? 'jot was' : 'jots were'} edited on two devices. Review</button>` : '';
   const nudge = Q.terms.length && !Q.sort && state.sortT.key !== 'relevance' ? '<button class="linkbtn" data-preset="match">Sort by best match</button>' : '';
@@ -2906,7 +2995,7 @@ function renderEditor() {
     <div class="field"><span class="lab" id="edClLab">${clLabel(it)}</span><ul class="cl" id="edCl">${edChecklist(it)}</ul><div><button class="mini" data-addline>Add checklist item</button></div></div>
     <div class="field"><span class="lab">Tags</span><div class="tagedit">${tagsHTML}<input type="text" id="edTag" placeholder="Add tag" aria-label="Add tag" style="width:auto;flex:1;min-width:100px"></div></div>
   </div>
-  <div class="ed-foot"><span>Created ${new Date(it.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span><button class="ghost danger" data-eddel>Delete</button></div>`;
+  <div class="ed-foot"><span>Created ${new Date(it.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span><span class="ed-foot-acts"><button class="ghost" data-edshare>Share&#x2026;</button><button class="ghost danger" data-eddel>Delete</button></span></div>`;
 }
 
 let toastT;
@@ -3084,7 +3173,7 @@ function bindUI() {
 
   $('#side').addEventListener('click', e => {
     const v = e.target.closest('[data-view]'), t = e.target.closest('[data-tag]');
-    if (v) { state.view = v.dataset.view; state.limit = 200; if (isPhone()) closeDrawer(); scheduleRender(); }
+    if (v) { state.view = v.dataset.view; state.limit = 200; state.idFilter = null; if (isPhone()) closeDrawer(); scheduleRender(); }
     if (t) { const k = t.dataset.tag; state.tags.has(k) ? state.tags.delete(k) : state.tags.add(k); scheduleRender(); }
     if (e.target.closest('[data-open-settings]')) openSettings();
     if (e.target.closest('[data-send-changes]')) sendChanges();
@@ -3094,6 +3183,7 @@ function bindUI() {
   $('#syncDot').addEventListener('click', openDrawer);
   $('#bnav').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    state.idFilter = null;
     if (b.dataset.view) { state.view = b.dataset.view; state.limit = 200; $('#list').scrollTop = 0; scheduleRender(); }
   });
   // phone jot box: Task toggle and Save keep the keyboard open for rapid jotting
@@ -3198,10 +3288,11 @@ function bindUI() {
     if (e.target.closest('[data-conflicts]')) { state.q = 'is:conflict'; $('#q').value = 'is:conflict'; state.view = 'all'; scheduleRender(); }
   });
 
-  const clearAll = () => { state.q = ''; q.value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.view = 'all'; state.status = 'all'; saveUI(); scheduleRender(); };
+  const clearAll = () => { state.idFilter = null; state.q = ''; q.value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.view = 'all'; state.status = 'all'; saveUI(); scheduleRender(); };
   $('#stats').addEventListener('click', e => {
     const u = e.target.closest('[data-untag]');
     if (u) { state.tags.delete(u.dataset.untag); scheduleRender(); }
+    if (e.target.closest('[data-unids]')) { state.idFilter = null; scheduleRender(); }
     if (e.target.closest('[data-clear]')) clearAll();
   });
 
@@ -3241,6 +3332,7 @@ function bindUI() {
     if (b.dataset.selact === 'forget' && armed('sel')) { const items = [...state.picked].map(id => S.items.get(id)); exitSelect(); deleteForever(items); }
     if (b.dataset.selact === 'cancel') exitSelect();
     if (b.dataset.selact === 'tags') { state.tagMenu = !state.tagMenu; renderSelbar(); }
+    if (b.dataset.selact === 'share') { const order = new Map(state.allIds.map((id, i) => [id, i])); shareItems([...state.picked].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9)).map(id => S.items.get(id)), exitSelect); }
   });
   $('#selbar').addEventListener('click', e => {
     const b = e.target.closest('[data-cleartag]'); if (!b) return;
@@ -3293,6 +3385,7 @@ function bindUI() {
     if (d.rmtag) { it.tags = it.tags.filter(t => t !== d.rmtag); touch(it); return renderEditor(); }
     if (d.muteauto) { it.mutedAuto = [...new Set([...(it.mutedAuto || []), d.muteauto])]; touch(it); return renderEditor(); }
     if ('eddel' in d) return del(it);
+    if ('edshare' in d) return shareItems([it]);
   });
 
   // keyboard shortcuts
@@ -3403,6 +3496,31 @@ function bindUI() {
     toast(`Rules saved. ${S.rules.length} rules applied to every jot.`);
   });
   $('#exportBtn').addEventListener('click', exportFile);
+  $('#inviteBtn').addEventListener('click', sendInvite);
+  $('#inviteCopyBtn').addEventListener('click', async () => {
+    const url = appLink();
+    if (!url) return toast('Invites work once NotePannuda is published at its web address.');
+    toast(await copyInvite(false) ? 'Link copied.' : url, '', null, 7000);
+  });
+  $('#inviteQrBtn').addEventListener('click', e => {
+    const box = $('#inviteQr'), url = appLink();
+    if (!url) return toast('Invites work once NotePannuda is published at its web address.');
+    const open = box.hidden;
+    if (open) box.innerHTML = `<div class="qr">${QR.svg(url, 'QR code for the NotePannuda app')}</div><p class="faint">Point a phone camera at this to open NotePannuda. It opens the app only, not your notes.</p>`;
+    box.hidden = !open; e.target.textContent = open ? 'Hide QR code' : 'Show QR code'; e.target.setAttribute('aria-expanded', String(open));
+  });
+  if (!appLink()) { $('#inviteNote').hidden = false; $('#inviteNote').textContent = 'Invites work once NotePannuda is published at its web address (see the README).'; }
+  // Drop a NotePannuda file (shared jots, a backup, or Send changes) anywhere on the window to import it.
+  const hasFiles = e => [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files');
+  window.addEventListener('dragover', e => { if (hasFiles(e)) { e.preventDefault(); document.body.classList.add('dropping'); } });
+  window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dropping'); });
+  window.addEventListener('drop', async e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); document.body.classList.remove('dropping');
+    const f = e.dataTransfer.files[0]; if (!f) return;
+    if (!/\.(json|txt)$/i.test(f.name)) { toast('Drop a NotePannuda file (.json) here to import it.'); return; }
+    try { await importText(await f.text(), `\u201c${f.name}\u201d`); } catch (err) { toast('Couldn\u2019t read that file.'); }
+  });
   $('#importIn').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
     try { await importText(await file.text(), `\u201c${file.name}\u201d`); } catch (err) { toast('Couldn\u2019t read that file.'); }
