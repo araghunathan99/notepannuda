@@ -16,7 +16,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
 - **Invite someone:** send the app's link from Settings (share sheet, copied link, or QR code). It's just the app, never your notes.
-- **Share jots with someone:** search or filter, select the jots, choose **Share…**, and send them through the share sheet (email, Slack, WhatsApp, and more) or download them as a file. They import it into their own NotePannuda. Your devices never pair or sync; see [Share with someone](#share-with-someone).
+- **Share jots with someone:** search or filter, select the jots, choose **Share…**, and send a link (or a file) through the share sheet: email, Slack, WhatsApp, and more. Tapping the link asks them to import the jots. They import it into their own NotePannuda. Your devices never pair or sync; see [Share with someone](#share-with-someone).
 - **Recently deleted:** restore all, by tag, or one by one, or delete forever right away instead of waiting 30 days.
 - **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**), **Manage tags** (add tags, or remove one tag or all of them), or **Delete**, and Undo if you change your mind. To remove a tag everywhere, tap it in the sidebar, choose **Select all**, then **Manage tags** and remove it there.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
@@ -132,15 +132,17 @@ Sharing sends a few jots to another person. It isn't pairing: their app and your
 
 1. Find the jots: search, pick a view, or tap tags to filter.
 2. Choose **Select** (or Cmd/Ctrl-click, or long-press on a phone), then pick jots, or **Select all** to take everything the search found.
-3. Choose **Share…** in the selection bar, then:
-   - **Share with an app…** opens the share sheet on Android or a Mac (Mail, Messages, Slack, WhatsApp, and so on).
-   - **Download file** saves the same jots as a file, to attach yourself or keep.
+3. Choose **Share…** in the selection bar (an open jot has **Share…** too), then:
+   - **Share link…** opens the share sheet on Android or a Mac with a link that has the jots inside it. Where there's no share sheet, **Copy link** copies it to paste into any message.
+   - **Share as file…** or **Download file** send the same jots as a file, for big batches or to keep a copy.
 
-   An open jot has **Share…** and **Download** at the bottom of the editor.
+**How the link works:** the jots are compressed into the part of the link after `#`. Browsers never send that part to a server, so GitHub and link previews in Slack or WhatsApp only see the plain app address. Anyone who has the link can read the jots, just like a file. Long links get cut off by some apps, so for large selections (roughly 70 or more jots) the panel offers a file instead.
+
+**Opening a link:** it opens NotePannuda, and a prompt lists the jots and asks before importing anything. If they don't have the app yet, the link opens it in the browser, imports the jots there, and they can install it from that page. On a Mac, a link opens in the default browser; if they use NotePannuda in a different browser, or as a Safari Dock app, they can paste the link into **Settings**, **Paste a NotePannuda share link**, then **Import link**.
 
 Shared files are plain text (`.txt`) with the jots inside, because text is the one file type every browser's share sheet accepts. Downloads are `.json`. Both kinds import the same way.
 
-**What's in the file:** the text, tags (including auto-tags, so they see the same tags you do), note or task, priority, weight, due date, and whether it's completed. Reminders stay with you, as do your device name, auto-tag rules, and anything you didn't select.
+**What's shared:** the text, tags (including auto-tags, so they see the same tags you do), note or task, priority, weight, due date, and whether it's completed. Reminders stay with you, as do your device name, auto-tag rules, and anything you didn't select.
 
 **To receive:** on Android, tap the file in the message, choose share, then NotePannuda (or save it and use **Import file**). On a Mac, drop the file onto the NotePannuda window, or use **Settings**, **Import file**. The message offers **Show them** to list just the jots that arrived.
 
@@ -150,7 +152,7 @@ Shared files are plain text (`.txt`) with the jots inside, because text is the o
 
 - **Delete** moves a jot to **Recently deleted** on all your devices. It waits there for 30 days.
 - In **Recently deleted**, restore everything, restore just the jots with certain tags (tap tags under **Restore by tag**, or in the sidebar, then **Restore**), or select jots one by one.
-- **Delete forever** (on a jot, on a selection, or on everything shown) erases the text right away instead of waiting 30 days. On a device that isn't paired, the jot is removed completely. On a paired device, only its ID and deletion time are kept, with no content, so an offline device can't sync its old copy back. Either way, importing a backup that has the jot brings it back.
+- **Delete forever** (on a jot, on a selection, or on everything shown) erases the text right away instead of waiting 30 days. On a paired device it's erased on all your devices: each keeps only the jot's ID and deletion time, with no content, and a device that's offline erases its copy the next time it syncs. If someone restores the jot on another device before the delete reaches it, the restore wins. On a device that isn't paired, the jot is removed completely. Either way, importing a backup that has the jot brings it back.
 
 ## Troubleshooting
 

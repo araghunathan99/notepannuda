@@ -1,7 +1,7 @@
 // NotePannuda service worker: lets the app open offline and load instantly from the home screen,
 // and receives files and text shared to NotePannuda from Android's share sheet.
 // Network first for the app itself (so updates arrive right away), cached copy when offline.
-const CACHE = 'notepannuda-v15';
+const CACHE = 'notepannuda-v17';
 const SHARE_CACHE = 'notepannuda-share';
 const ASSETS = ['./notepannuda.html', './manifest.webmanifest', './favicon.ico', './favicon.svg', './favicon-16.png', './favicon-32.png', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './logo-96.png', './badge-96.png', './shortcut-new.png', './shortcut-tasks.png'];
 
