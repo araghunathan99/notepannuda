@@ -618,7 +618,7 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
     <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <strong>Manage tags</strong> in the selection bar adds tags to the selected jots, or removes one tag or all of them, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
     <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>&#x2013;<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>&#x2013;<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
     <p>Checklists: tap the checklist button in the jot box, or start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
-    <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> or several at once like <code>p:high,med</code>, <code>due:overdue|today|week|none</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>.</p>
+    <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> (or <code>!h</code>) or several at once like <code>p:high,med</code>, <code>due:overdue</code> <code>due:today</code> <code>due:week</code> <code>due:none</code>, a day like <code>due:tomorrow</code> <code>due:fri</code> <code>due:+3d</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>. Use <code>|</code> or <code>OR</code> to match any of several searches: <code>Ben | Lemer</code>, or <code>Ben | !h | w:4 | due:tomorrow</code> for jots that mention Ben, or are high priority, or weigh 4, or are due tomorrow. Words side by side still all have to match: <code>Ben #work | !h</code>.</p>
     <p class="faint" id="appVersion" style="margin-top:18px"></p>
   </div>
 </div>
@@ -835,7 +835,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-28.3';
+const APP_VERSION = '2026-09-29.1';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -844,8 +844,29 @@ function retagAll() {
 }
 
 // ---------- query engine ----------
+// A query is one or more groups joined by "|" or a capital "OR" (so an ordinary "or" still searches the word).
+// Everything inside a group must match; a jot shows if any group matches. The view, the sidebar tags and the
+// toolbar buttons still narrow every group. Returns the groups plus what the list needs across all of them.
 function parseQuery(q) {
-  const Q = { terms: [], neg: [], tags: [], negTags: [], is: new Set(), p: new Set(), due: null, w: new Set(), sort: null };
+  const parts = [];
+  let cur = '';
+  for (const tok of q.match(/"[^"]*"?|\||[^\s"|]+|\s+/g) || []) {
+    if (tok === '|' || tok === 'OR') { parts.push(cur); cur = ''; } else cur += tok;
+  }
+  parts.push(cur);
+  const all = parts.map(parseGroup);
+  const used = all.filter(G => G.terms.length || G.neg.length || G.tags.length || G.negTags.length || G.is.size || G.p.size || G.due || G.dueDate || G.w.size);
+  const groups = used.length ? used : [all[0]];
+  return {
+    groups,
+    terms: [...new Set(groups.flatMap(G => G.terms))],
+    is: new Set(groups.flatMap(G => [...G.is])),
+    sort: all.reduce((s, G) => G.sort || s, null)
+  };
+}
+
+function parseGroup(q) {
+  const Q = { terms: [], neg: [], tags: [], negTags: [], is: new Set(), p: new Set(), due: null, dueDate: null, w: new Set(), sort: null };
   const re = /(-?)"([^"]*)"?|(\S+)/g;
   let m;
   while ((m = re.exec(q))) {
@@ -857,7 +878,9 @@ function parseQuery(q) {
     if (low[0] === '#' && low.length > 1) { (neg ? Q.negTags : Q.tags).push(low.slice(1)); continue; }
     if ((k = low.match(/^is:(task|note|done|open|conflict)$/))) { Q.is.add(k[1]); continue; }
     if ((k = low.match(/^p:(.+)$/)) && k[1].split(',').every(x => PMAP[x] !== undefined)) { k[1].split(',').forEach(x => Q.p.add(PMAP[x])); continue; } // p:high,med
+    if ((k = low.match(/^!(high|medium|med|low|h|m|l|1|2|3)$/))) { Q.p.add(PMAP[k[1]]); continue; } // same as the jot box
     if ((k = low.match(/^due:(overdue|today|week|none|any)$/))) { Q.due = k[1]; continue; }
+    if ((k = low.match(/^due:(.+)$/)) && (k = parseDate(k[1]))) { Q.dueDate = k; continue; } // due:tomorrow  due:fri  due:+3d
     if ((k = low.match(/^w:(none|[0-5](?:-[0-5])?(?:,[0-5](?:-[0-5])?)*)$/))) { // w:3  w:2,3  w:3-5  w:none
       if (k[1] === 'none') Q.w.add(0);
       else for (const part of k[1].split(',')) { const [a, b = a] = part.split('-').map(Number); for (let x = Math.min(a, b); x <= Math.max(a, b); x++) Q.w.add(x); }
@@ -898,7 +921,8 @@ function passFilters(it, Q, c) {
   for (const t of Q.negTags) if (tags.some(x => x.startsWith(t))) return false;
   if (c.prios.size && !(isTask && c.prios.has(it.priority))) return false;
   const due = Q.due || state.due;
-  if (due && due !== 'any') {
+  if (Q.dueDate) { if (it.due !== Q.dueDate) return false; }
+  else if (due && due !== 'any') {
     if (due === 'none') { if (it.due) return false; }
     else {
       if (!it.due) return false;
@@ -985,14 +1009,21 @@ function score(it, td) {
 function runSearch() {
   const t0 = performance.now();
   const Q = parseQuery(state.q);
-  const td = today();
-  const c = { td, wk: addDays(td, 7), prios: new Set([...state.prios, ...Q.p]), weights: new Set([...state.weights, ...Q.w]) };
-  let cand = null;
-  for (const term of Q.terms) {
-    if (term.length < 3) continue;
-    const s = candidatesFor(term);
-    if (!cand) cand = s; else { const next = new Set(); for (const n of (s.size < cand.size ? s : cand)) if ((s.size < cand.size ? cand : s).has(n)) next.add(n); cand = next; }
-    if (!cand.size) break;
+  const td = today(), wk = addDays(td, 7);
+  const groups = Q.groups.map(G => ({ G, c: { td, wk, prios: new Set([...state.prios, ...G.p]), weights: new Set([...state.weights, ...G.w]) } }));
+  // Each group narrows its own candidates by word; the list scans their union. A group with no indexable
+  // word (just filters, say) could match anything, so then every jot is scanned.
+  let cand = new Set();
+  for (const { G } of groups) {
+    let s = null;
+    for (const term of G.terms) {
+      if (term.length < 3) continue;
+      const t = candidatesFor(term);
+      if (!s) s = t; else { const next = new Set(); for (const n of (t.size < s.size ? t : s)) if ((t.size < s.size ? s : t).has(n)) next.add(n); s = next; }
+      if (!s.size) break;
+    }
+    if (!s) { cand = null; break; }
+    if (groups.length === 1) cand = s; else for (const n of s) cand.add(n);
   }
   const res = [];
   const iter = cand ? [...cand].map(n => S.items.get(S.ids[n])) : S.items.values();
@@ -1000,9 +1031,10 @@ function runSearch() {
     if (!it || !!it.deleted !== (state.view === 'trash') || it.stub) continue; // Recently deleted shows deleted jots that still have their text
     if (state.idFilter && !state.idFilter.has(it.id)) continue;             // "Show them" after an import
     const h = S.hay[S.num.get(it.id)];
-    if (Q.terms.length && !Q.terms.every(t => h.includes(t))) continue;
-    if (Q.neg.length && Q.neg.some(t => h.includes(t))) continue;
-    if (!passFilters(it, Q, c)) continue;
+    if (!groups.some(({ G, c }) =>
+      (!G.terms.length || G.terms.every(t => h.includes(t))) &&
+      !(G.neg.length && G.neg.some(t => h.includes(t))) &&
+      passFilters(it, G, c))) continue;
     res.push(it);
   }
   return { res, Q, ms: performance.now() - t0 };

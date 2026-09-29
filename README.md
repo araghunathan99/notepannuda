@@ -11,7 +11,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Instant capture:** every jot saves as you type. Finish with **Save note** or **Save as task** (or Enter / Cmd+Enter). On phones and tablets, Enter adds a new line and the Note / Task buttons save (changeable in Settings). The checklist button turns a line into a checklist item. On a computer, drag the divider under the jot box to make it taller or shorter. Quick syntax: `#tag`, `!h` `!m` `!l` for priority, `due:fri`, `due:+3d`, `w:3` for weight, and `[]` to start a checklist.
 - **Tasks:** priority, weight, due dates, reminders, and checklists. Checking the last item completes the task.
 - **Organized automatically:** tasks are grouped by Overdue, Today, Next 7 days, Later, and No due date. Completed tasks move to their own section.
-- **Search:** multi-word, instant even with 10,000 jots, with filters like `is:task`, `p:high,med`, `w:3-5`, `due:week`, `#tag`, and `-word`, plus `sort:` options. Priority and weight buttons let you pick several at once.
+- **Search:** multi-word, instant even with 10,000 jots, with filters like `is:task`, `p:high,med` (or `!h`), `w:3-5`, `due:week`, `due:tomorrow`, `#tag`, and `-word`, plus `sort:` options. Use `|` or `OR` to match any of several searches: `Ben | Lemer`, or `Ben | !h | w:4 | due:tomorrow`. Priority and weight buttons let you pick several at once.
 - **Auto-tags:** keyword rules tag jots for you.
 - **Sync between any number of devices:** changes move directly device to device, and conflicts are never silently lost.
 - **Send changes, Export and Import:** move everything as a JSON file through Drive, Files, email, or Quick Share.
