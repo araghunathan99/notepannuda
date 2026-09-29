@@ -102,7 +102,7 @@ body.resizing-v *{cursor:row-resize!important}
 .seg button{border:0;background:none;padding:5px 10px;font-size:13px;color:var(--graphite);border-right:1px solid var(--rule)}
 .seg button:last-child{border-right:0}
 .seg button.on{background:var(--accent-soft);color:var(--accent)}
-select.sel{border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:5px 8px;font-size:13px;color:var(--graphite)}
+select.sel,input.sel{border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:5px 8px;font-size:13px;color:var(--graphite)}
 .stats{padding:8px 28px;font-size:12px;color:var(--faint);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .stats .chip{display:inline-flex;gap:6px;align-items:center}
 .stats .chip button{border:0;background:none;color:var(--faint);padding:0;font-size:14px;line-height:1}
@@ -358,8 +358,8 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
   .filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:0 12px 2px;scroll-snap-type:x proximity}
   .filters::-webkit-scrollbar{display:none}
   .filters > *{flex:none;scroll-snap-align:start}
-  .filters .seg button,.filters select.sel,.filters .sortbtn{min-height:40px;padding:0 14px;font-size:14px}
-  .filters .seg,.filters select.sel,.filters .sortbtn{border-radius:20px}
+  .filters .seg button,.filters select.sel,.filters input.sel,.filters .sortbtn{min-height:40px;padding:0 14px;font-size:14px}
+  .filters .seg,.filters select.sel,.filters input.sel,.filters .sortbtn{border-radius:20px}
   .stats{order:2;padding:2px 16px 4px}
   .st-time,.st-sort{display:none}
 
@@ -519,9 +519,10 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
         <span class="seg-lab" aria-hidden="true">Weight</span><button data-w="1" aria-label="Weight 1">1</button><button data-w="2" aria-label="Weight 2">2</button><button data-w="3" aria-label="Weight 3">3</button><button data-w="4" aria-label="Weight 4">4</button><button data-w="5" aria-label="Weight 5">5</button><button data-w="0" title="Tasks with no weight">None</button>
       </div>
       <select class="sel" id="dueSel" aria-label="Due date filter">
-        <option value="">Any due date</option><option value="overdue">Overdue</option><option value="today">Due today</option>
-        <option value="week">Next 7 days</option><option value="none">No due date</option>
+        <option value="">Any due date</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="tomorrow">Due tomorrow</option>
+        <option value="week">Next 7 days</option><option value="none">No due date</option><option value="date">On a date&#x2026;</option>
       </select>
+      <input class="sel" type="date" id="dueDate" aria-label="Due on this date" hidden>
       <div class="sortwrap">
         <button class="sel sortbtn" id="sortBtn" aria-haspopup="true" aria-expanded="false" aria-controls="sortPanel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h13M3 12h9M3 18h5M18 8v12m0 0-3-3m3 3 3-3"/></svg>Sort: <span id="sortBtnLabel">Smart score</span></button>
         <div class="sortpanel" id="sortPanel" role="dialog" aria-label="Sort and group" hidden></div>
@@ -616,9 +617,9 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
 
     <h4>Shortcuts and quick syntax</h4>
     <p><span class="kbd">Enter</span> save jot, <span class="kbd">Shift</span>+<span class="kbd">Enter</span> new line, <span class="kbd">&#x2318;</span>+<span class="kbd">Enter</span> save as task, <span class="kbd">/</span> search, <span class="kbd">N</span> new jot, <span class="kbd">T</span> toggle task on selected, <span class="kbd">X</span> complete selected task, <span class="kbd">S</span> sort options, <span class="kbd">&#x2318;</span>/<span class="kbd">Ctrl</span>-click to select jots (long-press on a phone), <span class="kbd">Shift</span>-click to select a range, <span class="kbd">&#x2318;</span>+<span class="kbd">A</span> select all, <span class="kbd">Delete</span> delete selected, <strong>Manage tags</strong> in the selection bar adds tags to the selected jots, or removes one tag or all of them, <span class="kbd">X</span> complete selected, <span class="kbd">J</span>/<span class="kbd">K</span> move selection, <span class="kbd">Esc</span> close. Drag the edge of the sidebar or editor to resize it; double-click the edge to reset.</p>
-    <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>&#x2013;<code>!3</code>) for priority, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>&#x2013;<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
+    <p>In a jot: <code>#tag</code>, <code>!h</code> <code>!m</code> <code>!l</code> (or <code>!1</code>&#x2013;<code>!3</code>, or <code>p:high</code> <code>p:med</code> <code>p:low</code> as in search) for priority, <code>is:task</code> to save it as a task, <code>due:today</code>, <code>due:fri</code>, <code>due:+3d</code>, <code>due:2026-10-12</code>, <code>w:1</code>&#x2013;<code>w:5</code> for weight. A priority or due date turns the jot into a task.</p>
     <p>Checklists: tap the checklist button in the jot box, or start lines with <code>[]</code> or <code>- [ ]</code>. Enter starts the next item, Enter on an empty item ends the list. A jot with a checklist is saved as a task, and checking the last item completes it.</p>
-    <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> (or <code>!h</code>) or several at once like <code>p:high,med</code>, <code>due:overdue</code> <code>due:today</code> <code>due:week</code> <code>due:none</code>, a day like <code>due:tomorrow</code> <code>due:fri</code> <code>due:+3d</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>-word</code>, <code>"exact phrase"</code>, <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>. Use <code>|</code> or <code>OR</code> to match any of several searches: <code>Ben | Lemer</code>, or <code>Ben | !h | w:4 | due:tomorrow</code> for jots that mention Ben, or are high priority, or weigh 4, or are due tomorrow. Words side by side still all have to match: <code>Ben #work | !h</code>.</p>
+    <p>In search: <code>is:task</code> <code>is:note</code> <code>is:done</code> <code>is:open</code>, <code>p:high</code> (or <code>!h</code>) or several at once like <code>p:high,med</code>, <code>due:overdue</code> <code>due:today</code> <code>due:week</code> <code>due:none</code>, a day like <code>due:tomorrow</code> <code>due:fri</code> <code>due:+3d</code> <code>due:2026-10-12</code>, <code>w:3</code>, <code>w:2,3</code>, <code>w:3-5</code>, <code>w:none</code>, <code>#tag</code>, <code>"exact phrase"</code>. A minus in front excludes: <code>-word</code>, <code>-#tech</code>, <code>-!h</code>, <code>-p:low</code>, <code>-w:4</code>, <code>-due:tomorrow</code>, <code>-is:done</code>. Sort with <code>sort:due</code> <code>sort:-priority</code> <code>sort:match</code> <code>sort:weight</code> <code>sort:edited</code> <code>sort:az</code>. Use <code>|</code> or <code>OR</code> to match any of several searches: <code>Ben | Lemer</code>, or <code>Ben | !h | w:4 | due:tomorrow</code> for jots that mention Ben, or are high priority, or weigh 4, or are due tomorrow. Words side by side still all have to match: <code>Ben #work | !h</code>.</p>
     <p class="faint" id="appVersion" style="margin-top:18px"></p>
   </div>
 </div>
@@ -703,7 +704,9 @@ function parseDate(raw) {
 function parseCapture(raw) {
   const out = { tags: [], priority: 0, due: null, weight: 0, task: false };
   let text = raw.replace(TAG_RE, (m, sp, t) => { out.tags.push(t.toLowerCase()); return sp; });
-  text = text.replace(/(^|\s)!(high|medium|med|low|h|m|l|1|2|3)(?=\s|$)/gi, (m, sp, p) => { out.priority = PMAP[p.toLowerCase()]; return sp; });
+  // The same words work in search, so a jot can be found with exactly what was typed to make it.
+  text = text.replace(/(^|\s)(?:!|p:)(high|medium|med|low|none|h|m|l|1|2|3)(?=\s|$)/gi, (m, sp, p) => { out.priority = PMAP[p.toLowerCase()]; return sp; });
+  text = text.replace(/(^|\s)is:task(?=\s|$)/gi, (m, sp) => { out.task = true; return sp; });
   text = text.replace(/(^|\s)due:(\S+)(?=\s|$)/gi, (m, sp, d) => { const v = parseDate(d); if (!v) return m; out.due = v; return sp; });
   text = text.replace(/(^|\s)w:([1-5])(?=\s|$)/gi, (m, sp, w) => { out.weight = +w; return sp; });
   if (!text.includes('\n')) text = text.replace(/^\s*\[\s?\]\s+/, () => { out.task = true; return ''; });
@@ -835,7 +838,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-29.1';
+const APP_VERSION = '2026-09-29.2';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -855,7 +858,8 @@ function parseQuery(q) {
   }
   parts.push(cur);
   const all = parts.map(parseGroup);
-  const used = all.filter(G => G.terms.length || G.neg.length || G.tags.length || G.negTags.length || G.is.size || G.p.size || G.due || G.dueDate || G.w.size);
+  const used = all.filter(G => G.terms.length || G.neg.length || G.tags.length || G.negTags.length || G.is.size || G.notIs.size
+    || G.p.size || G.notP.size || G.due || G.notDue.length || G.w.size || G.notW.size);
   const groups = used.length ? used : [all[0]];
   return {
     groups,
@@ -865,8 +869,10 @@ function parseQuery(q) {
   };
 }
 
+// A leading minus excludes: -word, -#tag, -!h, -p:low, -w:4, -due:tomorrow, -is:done.
 function parseGroup(q) {
-  const Q = { terms: [], neg: [], tags: [], negTags: [], is: new Set(), p: new Set(), due: null, dueDate: null, w: new Set(), sort: null };
+  const Q = { terms: [], neg: [], tags: [], negTags: [], is: new Set(), notIs: new Set(), p: new Set(), notP: new Set(),
+    due: null, notDue: [], w: new Set(), notW: new Set(), sort: null };
   const re = /(-?)"([^"]*)"?|(\S+)/g;
   let m;
   while ((m = re.exec(q))) {
@@ -876,14 +882,17 @@ function parseGroup(q) {
     const low = tok.toLowerCase();
     let k;
     if (low[0] === '#' && low.length > 1) { (neg ? Q.negTags : Q.tags).push(low.slice(1)); continue; }
-    if ((k = low.match(/^is:(task|note|done|open|conflict)$/))) { Q.is.add(k[1]); continue; }
-    if ((k = low.match(/^p:(.+)$/)) && k[1].split(',').every(x => PMAP[x] !== undefined)) { k[1].split(',').forEach(x => Q.p.add(PMAP[x])); continue; } // p:high,med
-    if ((k = low.match(/^!(high|medium|med|low|h|m|l|1|2|3)$/))) { Q.p.add(PMAP[k[1]]); continue; } // same as the jot box
-    if ((k = low.match(/^due:(overdue|today|week|none|any)$/))) { Q.due = k[1]; continue; }
-    if ((k = low.match(/^due:(.+)$/)) && (k = parseDate(k[1]))) { Q.dueDate = k; continue; } // due:tomorrow  due:fri  due:+3d
+    if ((k = low.match(/^is:(task|note|done|open|conflict)$/))) { (neg ? Q.notIs : Q.is).add(k[1]); continue; }
+    if ((k = low.match(/^p:(.+)$/)) && k[1].split(',').every(x => PMAP[x] !== undefined)) { k[1].split(',').forEach(x => (neg ? Q.notP : Q.p).add(PMAP[x])); continue; } // p:high,med
+    if ((k = low.match(/^!(high|medium|med|low|none|h|m|l|1|2|3)$/))) { (neg ? Q.notP : Q.p).add(PMAP[k[1]]); continue; } // same as the jot box
+    if ((k = low.match(/^due:(.+)$/))) { // due:overdue  due:week  due:none  due:tomorrow  due:fri  due:+3d  due:2026-10-12
+      const d = /^(overdue|today|week|none|any)$/.test(k[1]) ? k[1] : parseDate(k[1]);
+      if (d) { if (neg) Q.notDue.push(d); else Q.due = d; continue; }
+    }
     if ((k = low.match(/^w:(none|[0-5](?:-[0-5])?(?:,[0-5](?:-[0-5])?)*)$/))) { // w:3  w:2,3  w:3-5  w:none
-      if (k[1] === 'none') Q.w.add(0);
-      else for (const part of k[1].split(',')) { const [a, b = a] = part.split('-').map(Number); for (let x = Math.min(a, b); x <= Math.max(a, b); x++) Q.w.add(x); }
+      const into = neg ? Q.notW : Q.w;
+      if (k[1] === 'none') into.add(0);
+      else for (const part of k[1].split(',')) { const [a, b = a] = part.split('-').map(Number); for (let x = Math.min(a, b); x <= Math.max(a, b); x++) into.add(x); }
       continue;
     }
     if ((k = low.match(/^sort:(-?)([a-z]+)$/)) && SORT_ALIAS[k[2]]) { const f = SORT_ALIAS[k[2]]; Q.sort = { key: f, dir: FIELDS[f].dir * (k[1] ? -1 : 1) }; continue; }
@@ -920,26 +929,36 @@ function passFilters(it, Q, c) {
   for (const t of Q.tags) if (!tags.some(x => x.startsWith(t))) return false;
   for (const t of Q.negTags) if (tags.some(x => x.startsWith(t))) return false;
   if (c.prios.size && !(isTask && c.prios.has(it.priority))) return false;
+  if (Q.notP.size && isTask && Q.notP.has(it.priority)) return false;
   const due = Q.due || state.due;
-  if (Q.dueDate) { if (it.due !== Q.dueDate) return false; }
-  else if (due && due !== 'any') {
-    if (due === 'none') { if (it.due) return false; }
-    else {
-      if (!it.due) return false;
-      if (due === 'overdue' && !(it.due < c.td && !it.done)) return false;
-      if (due === 'today' && it.due !== c.td) return false;
-      if (due === 'week' && (it.due < c.td || it.due > c.wk)) return false;
-    }
-  }
+  if (due && due !== 'any' && !dueMatch(it, due, c)) return false;
+  for (const d of Q.notDue) if (dueMatch(it, d, c)) return false;
   if (c.weights.size && !(isTask && c.weights.has(it.weight || 0))) return false;
-  for (const k of Q.is) {
-    if (k === 'task' && !isTask) return false;
-    if (k === 'note' && isTask) return false;
-    if (k === 'done' && !it.done) return false;
-    if (k === 'open' && (!isTask || it.done)) return false;
-    if (k === 'conflict' && !openConflicts(it).length) return false;
-  }
+  if (Q.notW.size && isTask && Q.notW.has(it.weight || 0)) return false;
+  for (const k of Q.is) if (!isMatch(it, k)) return false;
+  for (const k of Q.notIs) if (isMatch(it, k)) return false;
   return true;
+}
+
+// d is a named range, or a YYYY-MM-DD day. "any" only reaches here from -due:any: it excludes jots with a due date.
+function dueMatch(it, d, c) {
+  if (d === 'none') return !it.due;
+  if (!it.due) return false;
+  if (d === 'any') return true;
+  if (d === 'overdue') return it.due < c.td && !it.done;
+  if (d === 'today') return it.due === c.td;
+  if (d === 'tomorrow') return it.due === c.tm;
+  if (d === 'week') return it.due >= c.td && it.due <= c.wk;
+  return it.due === d;
+}
+
+function isMatch(it, k) {
+  const isTask = it.type === 'task';
+  if (k === 'task') return isTask;
+  if (k === 'note') return !isTask;
+  if (k === 'done') return !!it.done;
+  if (k === 'open') return isTask && !it.done;
+  return !!openConflicts(it).length; // conflict
 }
 
 // ---------- sort engine ----------
@@ -1010,7 +1029,8 @@ function runSearch() {
   const t0 = performance.now();
   const Q = parseQuery(state.q);
   const td = today(), wk = addDays(td, 7);
-  const groups = Q.groups.map(G => ({ G, c: { td, wk, prios: new Set([...state.prios, ...G.p]), weights: new Set([...state.weights, ...G.w]) } }));
+  const tm = addDays(td, 1);
+  const groups = Q.groups.map(G => ({ G, c: { td, tm, wk, prios: new Set([...state.prios, ...G.p]), weights: new Set([...state.weights, ...G.w]) } }));
   // Each group narrows its own candidates by word; the list scans their union. A group with no indexable
   // word (just filters, say) could match anything, so then every jot is scanned.
   let cand = new Set();
@@ -2261,7 +2281,7 @@ function exportFile() {
 // Show just a given set of jots (the ones an import brought in), as a filter you can clear like any other.
 function showOnly(ids) {
   state.idFilter = new Set(ids); state.view = 'all'; state.q = ''; $('#q').value = ''; state.tags.clear();
-  state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.status = 'all';
+  state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; $('#dueDate').hidden = true; state.status = 'all';
   if (isPhone() && state.sel) closeEditor();
   scheduleRender();
 }
@@ -3493,7 +3513,17 @@ function bindUI() {
   $('#weightSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const w = +b.dataset.w; state.weights.has(w) ? state.weights.delete(w) : state.weights.add(w); state.limit = 200; scheduleRender(); });
   $('#prioSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = +b.dataset.p; state.prios.has(p) ? state.prios.delete(p) : state.prios.add(p); scheduleRender(); });
   $('#statusSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.status = b.dataset.s; state.limit = 200; saveUI(); scheduleRender(); });
-  $('#dueSel').addEventListener('change', e => { state.due = e.target.value; scheduleRender(); });
+  $('#dueSel').addEventListener('change', e => {
+    const v = e.target.value, di = $('#dueDate');
+    di.hidden = v !== 'date';
+    if (v === 'date') {
+      if (!di.value) di.value = addDays(null, 1);
+      state.due = di.value; di.focus();
+      try { di.showPicker(); } catch {}
+    } else state.due = v;
+    scheduleRender();
+  });
+  $('#dueDate').addEventListener('change', e => { state.due = e.target.value; scheduleRender(); });
   const applyPreset = k => { const v = PRESETS.find(p => p[0] === k)[2]; setSort(() => { state.sortT = { ...v.sortT }; if (v.sortN) state.sortN = { ...v.sortN }; }); };
   const openSort = () => {
     const p = $('#sortPanel'), r = $('#sortBtn').getBoundingClientRect(), m = document.querySelector('.main').getBoundingClientRect();
@@ -3535,11 +3565,11 @@ function bindUI() {
     if (e.target.closest('[data-forget-all]') && armed('all')) deleteForever(state.allIds.map(id => S.items.get(id)));
     const tt = e.target.closest('[data-trashtag]');
     if (tt) { const t = tt.dataset.trashtag; state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); state.armed = null; scheduleRender(); }
-    if (e.target.closest('[data-clear-trash]')) { state.q = ''; $('#q').value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.status = 'all'; state.armed = null; saveUI(); scheduleRender(); }
+    if (e.target.closest('[data-clear-trash]')) { state.q = ''; $('#q').value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; $('#dueDate').hidden = true; state.status = 'all'; state.armed = null; saveUI(); scheduleRender(); }
     if (e.target.closest('[data-conflicts]')) { state.q = 'is:conflict'; $('#q').value = 'is:conflict'; state.view = 'all'; scheduleRender(); }
   });
 
-  const clearAll = () => { state.idFilter = null; state.q = ''; q.value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; state.view = 'all'; state.status = 'all'; saveUI(); scheduleRender(); };
+  const clearAll = () => { state.idFilter = null; state.q = ''; q.value = ''; state.tags.clear(); state.prios.clear(); state.weights.clear(); state.due = ''; $('#dueSel').value = ''; $('#dueDate').hidden = true; state.view = 'all'; state.status = 'all'; saveUI(); scheduleRender(); };
   $('#stats').addEventListener('click', e => {
     const u = e.target.closest('[data-untag]');
     if (u) { state.tags.delete(u.dataset.untag); scheduleRender(); }
