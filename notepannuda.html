@@ -107,7 +107,10 @@ select.sel{border:1px solid var(--rule);background:var(--surface);border-radius:
 .stats .chip{display:inline-flex;gap:6px;align-items:center}
 .stats .chip button{border:0;background:none;color:var(--faint);padding:0;font-size:14px;line-height:1}
 
-.list{flex:1;overflow:auto;padding:4px 16px 40px}
+.list{flex:1;overflow:auto;padding:0 16px 40px}
+/* Sticky group headers stick to the top edge of the list's padding, so any top padding leaves a strip where
+   scrolled jots show through above them. The small breathing space goes in a spacer that scrolls away instead. */
+.list::before{content:'';display:block;height:4px}
 .item{display:grid;grid-template-columns:28px 1fr auto;gap:10px;padding:11px 12px;border-radius:8px;border:1px solid transparent;cursor:pointer;align-items:start}
 .item:hover{background:var(--surface)}
 .item.sel{background:var(--surface);border-color:var(--rule-strong)}
@@ -832,7 +835,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-28.2';
+const APP_VERSION = '2026-09-28.3';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
