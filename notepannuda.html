@@ -838,7 +838,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-09-29.2';
+const APP_VERSION = '2026-10-01.1';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -2487,12 +2487,13 @@ function completePicked() {
   });
 }
 // ---------- delete forever ----------
-// Deleting forever wipes a jot's text, tags and everything else.
-//   * Not paired: the record is removed completely, as if the jot had never been here.
-//   * Paired: only a bare marker stays (the jot's id and when it was deleted, no content). Choosing Delete
-//     forever also stamps the marker as purged, and sync carries that to your other devices, which erase
-//     their copies too. Devices that are offline erase theirs the next time they sync. The automatic
-//     clean-up after RECENT_DAYS isn't sent: every device does that on its own, from the same deletion time.
+// Deleting forever wipes a jot's text, tags and everything else. Only a bare marker stays (the jot's id and
+// when it was deleted, no content), stamped as purged, and sync carries it to your other devices, which erase
+// their copies too. Devices that are offline erase theirs the next time they sync. The marker is kept even
+// on a device that isn't paired right now, so pairing it again (with the same devices) erases the jot there
+// as well, instead of it coming back from their Recently deleted.
+// The automatic clean-up after RECENT_DAYS isn't sent: every device does that on its own, from the same
+// deletion time. On a device that isn't paired it removes the record completely.
 // Either way, importing a backup file brings the jot back (see importText): a marker never blocks an import.
 function toStub(it) {
   const st = stubOf(it);
@@ -2516,7 +2517,7 @@ function forgetItems(items, everywhere) {
   for (const it of items) {
     if (!it || !it.deleted) continue;
     if (!it.stub) n++;
-    if (!keepMarker) { dropItem(it); continue; }
+    if (!keepMarker && !everywhere && !isPurged(it)) { dropItem(it); continue; }
     if (everywhere && !isPurged(it)) { it.v = { ...(it.v || {}), purged: Clock.now() }; toStub(it); DirectSync.localChange(it.id); }
     else if (!it.stub) toStub(it);
   }
@@ -2525,10 +2526,11 @@ function forgetItems(items, everywhere) {
   return n;
 }
 // On launch: jots in Recently deleted longer than RECENT_DAYS are deleted forever. On a device that isn't
-// paired, leftover markers are cleared out too (there's no other device for them to protect against).
+// paired, leftover markers are cleared out too, except Delete forever markers: those wait for the device to
+// pair again, so the jot is erased on the other devices too instead of coming back from their Recently deleted.
 function purgeDeleted() {
   const cut = Date.now() - RECENT_DAYS * 864e5;
-  const old = [...S.items.values()].filter(it => it.deleted && (it.stub ? !DirectSync.paired() : (stampTime(it.v && it.v.deleted) || it.updatedAt || 0) < cut));
+  const old = [...S.items.values()].filter(it => it.deleted && (it.stub ? !DirectSync.paired() && !isPurged(it) : (stampTime(it.v && it.v.deleted) || it.updatedAt || 0) < cut));
   return old.length ? forgetItems(old) : 0;
 }
 // Two taps for anything that can't be undone: the first arms the button, the second (within 4 s) acts.

@@ -152,7 +152,7 @@ Shared files are plain text (`.txt`) with the jots inside, because text is the o
 
 - **Delete** moves a jot to **Recently deleted** on all your devices. It waits there for 30 days.
 - In **Recently deleted**, restore everything, restore just the jots with certain tags (tap tags under **Restore by tag**, or in the sidebar, then **Restore**), or select jots one by one.
-- **Delete forever** (on a jot, on a selection, or on everything shown) erases the text right away instead of waiting 30 days. On a paired device it's erased on all your devices: each keeps only the jot's ID and deletion time, with no content, and a device that's offline erases its copy the next time it syncs. If someone restores the jot on another device before the delete reaches it, the restore wins. On a device that isn't paired, the jot is removed completely. Either way, importing a backup that has the jot brings it back.
+- **Delete forever** (on a jot, on a selection, or on everything shown) erases the text right away instead of waiting 30 days. It's erased on all your devices: each keeps only the jot's ID and deletion time, with no content, and a device that's offline erases its copy the next time it syncs. This works even if you delete forever while a device is unpaired: when you pair it again, the jot is erased on the other devices too instead of coming back in their Recently deleted. If someone restores or edits the jot on another device before the delete reaches it, that wins. Importing a backup that has the jot brings it back.
 
 ## Troubleshooting
 
