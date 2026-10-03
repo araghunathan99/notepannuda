@@ -21,6 +21,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 - **Select to complete or delete in bulk:** choose **Select** above the list, Cmd/Ctrl-click a jot, or long-press on a phone. Shift-click selects a range, **Select all** takes everything in the current view or search. Then choose **Complete** (or **Reopen**), **Manage tags** (add tags, or remove one tag or all of them), or **Delete**, and Undo if you change your mind. To remove a tag everywhere, tap it in the sidebar, choose **Select all**, then **Manage tags** and remove it there.
 - **Resizable panels:** on a computer, drag the edge of the sidebar or editor (double-click the edge to reset).
 - **Notifications:** when another device connects, a daily summary of tasks due (at a time you choose), and task reminders. Turn them on in Settings. On a Mac keep the app open (minimized is fine); on Android they arrive while the app is open or recently used, plus an optional background check in Chrome. Chrome decides when that check runs, so if it's more than 3 hours after your chosen time (9:00 AM by default), the summary waits until you open the app instead of arriving at night.
+- **On-time notifications (optional):** with the push server set up (see `push-server/README.md`), turn on **On time, even when NotePannuda is closed** in Settings, under Notifications. Reminders and the daily summary then arrive at their exact time even when the app is closed. Each device schedules its own notifications, so a reminder set on another device reaches it once they've synced. The local notifications above stay on as a backup.
 - **Phone-friendly:** swipe to complete or delete, Android back-gesture support, and a share target (share text or files into NotePannuda). Works offline.
 
 ## Files
@@ -37,6 +38,7 @@ Jot first, organize later. NotePannuda is a fast, local-first notes and tasks ap
 | `shortcut-*.png` | Long-press shortcut icons |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 | `publish.sh` | Publishes or updates the site from your Mac |
+| `push-server/` | Optional Cloudflare Worker for on-time notifications, with its own README |
 
 ## Publish it on GitHub Pages
 
@@ -97,6 +99,7 @@ Keep the pairing code private: anyone who has it can sync with your notes. To ta
 - **Relays:** they see small encrypted messages, when your devices are online, and their IP addresses. They can't read anything, and they don't store these messages.
 - **Address lookup:** to find a direct path across networks, devices ask public STUN servers (Cloudflare, Google), which see your IP address but no notes.
 - **GitHub:** it hosts only the empty app.
+- **Push server (only if you turn on on-time notifications):** it sees a random ID for each device, that device's push address, and when each notification is due. It can't read them: each device seals its notifications before uploading them, with keys that never leave its browser. Google (or Apple, on Safari) delivers them and sees only the sealed message.
 
 ## Update the app
 

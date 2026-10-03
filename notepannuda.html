@@ -820,6 +820,7 @@ function touch(it, opts = {}) {
   indexItem(it);
   markDirty(it.shard);
   DirectSync.localChange(it.id);
+  Push.dirty();
   if (!opts.silent) scheduleRender();
 }
 
@@ -838,7 +839,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-02.2';
+const APP_VERSION = '2026-10-02.3';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -1328,6 +1329,7 @@ function mergeIncoming(list) {
     S.items.set(it.id, it); indexItem(it); primeShadow(it);
     changed = true; shards.add(it.shard); ids.add(it.id);
   }
+  if (changed) Push.dirty();   // a change from another device can add or move this device's reminders
   return { changed, shards, texts, ids };
 }
 
@@ -2389,13 +2391,14 @@ async function setDueNotified(d) {
   if (Local.kind === 'indexeddb') { try { await idbTx(Local.db, 'meta', 'readwrite', os => os.put(d, 'dueNotified')); } catch (e) { } }
   meta.dueNotified = d; saveMeta();
 }
-function dueSummary() {
-  const td = today(), open = [...S.items.values()].filter(i => !i.deleted && i.type === 'task' && !i.done && i.due);
+// For day td (today by default), as it reads that morning: the push schedule plans a week ahead.
+function dueSummary(td = today()) {
+  const open = [...S.items.values()].filter(i => !i.deleted && i.type === 'task' && !i.done && i.due);
   const dueToday = open.filter(i => i.due === td), overdue = open.filter(i => i.due < td);
   if (!dueToday.length && !overdue.length) return null;
   const title = dueToday.length ? `${plural(dueToday.length, 'task', 'tasks')} due today${overdue.length ? `, ${overdue.length} overdue` : ''}` : `${plural(overdue.length, 'overdue task', 'overdue tasks')}`;
   const list = [...dueToday, ...overdue], more = list.length - 3;
-  return { title, body: list.slice(0, 3).map(t => '\u2022 ' + (firstLine(t.text) || 'Untitled task')).join('\n') + (more > 0 ? `\n+${more} more` : '') };
+  return { title, body: list.slice(0, 3).map(t => '\u2022 ' + clip(firstLine(t.text) || 'Untitled task', 120)).join('\n') + (more > 0 ? `\n+${more} more` : '') };
 }
 let dueChecking = false;
 async function checkDue() {
@@ -2410,7 +2413,8 @@ async function checkDue() {
     if (await getDueNotified() === td) return;
     const sum = dueSummary();
     if (!sum) { await setDueNotified(td); return; }
-    if (away()) { if (late || !await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when you're next in the app
+    if (away() && Push.covers(`sum:${td}:${DEVICE}`, dueAt(td))) { } // the push server sends it
+    else if (away()) { if (late || !await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when you're next in the app
     else toast(sum.title, 'Show', () => { state.view = 'today'; scheduleRender(); });
     await setDueNotified(td);
   } finally { dueChecking = false; }
@@ -2423,6 +2427,7 @@ async function registerDueCheck() {
     if (!reg || !('periodicSync' in reg)) return 'unsupported';
     const st = await navigator.permissions.query({ name: 'periodic-background-sync' }).catch(() => ({ state: 'denied' }));
     if (st.state !== 'granted') return 'not allowed';
+    if (Push.on()) { await reg.periodicSync.unregister('notepannuda-due'); return 'push'; } // exact-time pushes do this now
     if (Notify.prefs().due && Notify.granted()) { await reg.periodicSync.register('notepannuda-due', { minInterval: 6 * 3600 * 1000 }); return 'on'; }
     await reg.periodicSync.unregister('notepannuda-due'); return 'off';
   } catch (e) { return 'unsupported'; }
@@ -2440,7 +2445,8 @@ async function checkReminders() {
       if (it.deleted || it.done || !it.remindAt || it.reminded) continue;
       if (new Date(it.remindAt).getTime() > now) continue;
       const title = firstLine(it.text) || 'Untitled task';
-      if (away() && !await Notify.show('Reminder', title, { tag: 'reminder-' + it.id })) continue;
+      const pushed = Push.covers(`rem:${it.id}:${DEVICE}`, new Date(it.remindAt).getTime()); // the push server sends it
+      if (away() && !pushed && !await Notify.show('Reminder', title, { tag: 'reminder-' + it.id })) continue;
       if (it.reminded) continue; // another device got there first while the notification was going up
       it.reminded = true; touch(it, { silent: true });
       toast('Reminder: ' + title, 'Open', () => select(it.id));
@@ -2449,6 +2455,138 @@ async function checkReminders() {
   checkDue();
 }
 function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => { }); } catch (e) { } }
+
+// ---------- exact-time notifications through the push server (push-server/) ----------
+// Each device schedules only its own reminders and daily summaries. It seals every notification with its own
+// browser's push keys (RFC 8291), which never leave this device, and uploads the sealed bytes with their
+// times. The server can't read them: at each time it hands them to the push service (Google, Apple, ...),
+// so they arrive even when the app is closed. While the server holds a notification, the local checks above
+// only show their in-app message, so it doesn't arrive twice.
+// Slot names carry the target device ("rem:<jot>:<device>"), so devices can later schedule for each other
+// too (see push-server/README.md). For now each one writes only its own.
+// No server or key set: the option is hidden and the local notifications do everything.
+const PUSH_SERVER = '';
+const PUSH_VAPID_KEY = '';
+const PUSH_SUM_DAYS = 7;   // daily summaries scheduled this many days ahead (refreshed at least once a day)
+const PUSH_REM_DAYS = 60;  // reminders this far ahead (the server takes up to 62 days)
+async function hkdfBytes(salt, ikm, info, len) {
+  const k = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, k, len * 8));
+}
+// Web Push message encryption (RFC 8291, aes128gcm) for one browser's push keys: p256dh and auth.
+async function webPushSeal(text, p256dh, auth, test = {}) {
+  const uaKey = await crypto.subtle.importKey('raw', p256dh, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+  const as = test.keys || await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']); // one-time key per message
+  const asPub = new Uint8Array(await crypto.subtle.exportKey('raw', as.publicKey));
+  const ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: uaKey }, as.privateKey, 256));
+  const ikm = await hkdfBytes(auth, ecdh, joinBytes(te.encode('WebPush: info\0'), p256dh, asPub), 32);
+  const salt = test.salt || crypto.getRandomValues(new Uint8Array(16));
+  const cek = await hkdfBytes(salt, ikm, te.encode('Content-Encoding: aes128gcm\0'), 16);
+  const nonce = await hkdfBytes(salt, ikm, te.encode('Content-Encoding: nonce\0'), 12);
+  const key = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, key, joinBytes(te.encode(text), Uint8Array.of(2))));
+  const head = new Uint8Array(21); head.set(salt); new DataView(head.buffer).setUint32(16, 4096); head[20] = asPub.length;
+  return joinBytes(head, asPub, ct);
+}
+const clip = (s, n) => s.length > n ? s.slice(0, n - 1) + '\u2026' : s;
+// This device's notifications for the coming weeks: what each says and when it's due.
+function pushPlan() {
+  const out = [], now = Date.now();
+  for (const it of S.items.values()) {
+    if (it.deleted || it.stub || it.done || !it.remindAt || it.reminded || !/^[A-Za-z0-9_.\-]{1,100}$/.test(it.id)) continue;
+    const at = new Date(it.remindAt).getTime();
+    if (!(at > now) || at > now + PUSH_REM_DAYS * 864e5) continue;
+    out.push({ slot: `rem:${it.id}:${DEVICE}`, at, ttl: 6 * 3600, urgency: 'high', msg: { t: 'rem', id: it.id, title: 'Reminder', body: clip(firstLine(it.text) || 'Untitled task', 200) } });
+  }
+  const pr = Notify.prefs();
+  if (pr.due) {
+    for (let i = 0; i < PUSH_SUM_DAYS; i++) {
+      const day = addDays(null, i), at = dueAt(day);
+      if (at <= now) continue;
+      const sum = dueSummary(day); if (!sum) continue;
+      // Kept by the push service for at most DUE_LATE_MIN: a phone that's off all morning doesn't get it at night.
+      out.push({ slot: `sum:${day}:${DEVICE}`, at, ttl: DUE_LATE_MIN * 60, urgency: 'normal', msg: { t: 'sum', date: day, title: sum.title, body: sum.body } });
+    }
+  }
+  return out.sort((a, b) => a.at - b.at).slice(0, 400);
+}
+const dueAt = day => { const [h, m] = (Notify.prefs().dueTime || '09:00').split(':').map(Number), d = new Date(day + 'T00:00:00'); d.setHours(h, m, 0, 0); return d.getTime(); };
+const Push = {
+  available: () => !!(PUSH_SERVER && PUSH_VAPID_KEY && 'serviceWorker' in navigator && 'PushManager' in window && Notify.supported()),
+  st: () => meta.push || (meta.push = {}),
+  on: () => Push.available() && !!(meta.push && meta.push.on) && Notify.granted(),
+  // The server took this notification for this device (and sends it, or already has). Remembered for two days
+  // after it was due, since the server forgets an entry once it's sent.
+  covers: (slot, at) => { const p = meta.push; return Push.on() && navigator.onLine && p.status === 'ok' && !!p.held && p.held[slot] === at; },
+  took(slots) {
+    const p = Push.st(), cut = Date.now() - 2 * 864e5; p.slots = slots || {};
+    p.held = Object.fromEntries(Object.entries({ ...(p.held || {}), ...p.slots }).filter(([, at]) => at > cut));
+  },
+  timer: null, busy: false, again: false,
+  dirty() { if (!Push.on()) return; clearTimeout(Push.timer); Push.timer = setTimeout(() => Push.sync(), 5000); },
+  async api(path, method, body) {
+    const p = Push.st();
+    const r = await fetch(`${PUSH_SERVER.replace(/\/$/, '')}/v1/d/${p.id}${path}`, { method, headers: { Authorization: 'Bearer ' + p.token, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || `the push server said ${r.status}`);
+    return j;
+  },
+  async subscription(create) {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    const k = sub && sub.options && sub.options.applicationServerKey;
+    if (k && b64u.enc(new Uint8Array(k)) !== PUSH_VAPID_KEY) { await sub.unsubscribe(); sub = null; } // made for a different server
+    if (!sub && create) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u.dec(PUSH_VAPID_KEY) });
+    return sub;
+  },
+  async enable() {
+    const p = Push.st();
+    if (!p.id) { p.id = randHex(16); p.token = b64u.enc(crypto.getRandomValues(new Uint8Array(32))); }
+    Object.assign(p, { on: true, server: PUSH_SERVER.replace(/\/$/, ''), error: '', planHash: '', checkedAt: 0 });
+    await Local.setMeta(meta);
+    await Push.sync();
+  },
+  async disable() {
+    const p = Push.st();
+    try { if (p.id) await Push.api('', 'DELETE'); } catch (e) { }
+    try { const sub = await Push.subscription(false); if (sub) await sub.unsubscribe(); } catch (e) { }
+    Object.assign(p, { on: false, slots: {}, held: {}, status: '', endpoint: '', planHash: '', error: '' });
+    await Local.setMeta(meta); registerDueCheck();
+  },
+  // Make sure this device is registered, then upload its schedule if it changed (or the server lost it).
+  async sync() {
+    if (!Push.on() || !navigator.onLine) return;
+    if (Push.busy) { Push.again = true; return; }
+    Push.busy = true;
+    const p = Push.st();
+    try {
+      const sub = await Push.subscription(true);
+      if (!sub) throw new Error('this browser didn\u2019t give a push address');
+      if (Date.now() - (p.checkedAt || 0) > 30 * 60000 && p.endpoint === sub.endpoint) { // now and then: what does the server hold?
+        try { const st = await Push.api('', 'GET'); p.status = st.status; Push.took(st.slots); } catch (e) { p.status = ''; }
+        p.checkedAt = Date.now();
+      }
+      if (sub.endpoint !== p.endpoint || p.status !== 'ok') { // new address, or the push service dropped the old one
+        const st = await Push.api('', 'PUT', { endpoint: sub.endpoint });
+        p.endpoint = sub.endpoint; p.status = st.status; Push.took(st.slots); p.planHash = '';
+      }
+      const plan = pushPlan(), hash = hash53(JSON.stringify(plan)).toString(36);
+      const same = Object.keys(p.slots || {}).length === plan.length && plan.every(e => p.slots[e.slot] === e.at);
+      if (hash !== p.planHash || !same || p.planDay !== today()) {
+        const key = new Uint8Array(sub.getKey('p256dh')), auth = new Uint8Array(sub.getKey('auth')), entries = [];
+        for (const e of plan) entries.push({ slot: e.slot, at: e.at, ttl: e.ttl, urgency: e.urgency, payload: b64u.enc(await webPushSeal(JSON.stringify(e.msg), key, auth)) });
+        const st = await Push.api('/schedule', 'PUT', { entries });
+        Push.took(st.slots); Object.assign(p, { status: st.status, planHash: hash, planDay: today(), syncedAt: Date.now() });
+      }
+      p.error = '';
+    } catch (e) { p.error = clip(String(e && e.message || e), 140); }
+    finally {
+      Push.busy = false; saveMeta(); registerDueCheck();
+      const row = $('#pushRow'); if (row && !row.contains(document.activeElement)) row.outerHTML = pushSettingsHTML();
+      if (Push.again) { Push.again = false; Push.dirty(); }
+    }
+  }
+};
 
 // ---------- UI state + rendering ----------
 const state = { view: 'all', q: '', tags: new Set(), prios: new Set(), due: '', sortT: { key: 'smart', dir: -1, then: 'due', thenDir: 1 }, sortN: { key: 'updated', dir: -1 }, group: 'urgency', status: 'all', collapsed: new Set(['completed']), sel: null, limit: 200, results: [] };
@@ -3491,8 +3629,9 @@ function bindUI() {
     if (e.target.id === 'nConnect') pr.connect = e.target.checked;
     if (e.target.id === 'nDue') pr.due = e.target.checked;
     if (e.target.id === 'nDueTime' && /^\d{2}:\d{2}$/.test(e.target.value)) { pr.dueTime = e.target.value; await setDueNotified(''); }
+    if (e.target.id === 'nPush') { e.target.disabled = true; await (e.target.checked ? Push.enable() : Push.disable()); renderNotifySettings(); return; }
     meta.notify = pr; await Local.setMeta(meta); // saved now, so the background check sees it
-    await registerDueCheck(); checkDue();
+    await registerDueCheck(); checkDue(); Push.dirty();
   });
   // Tapping a notification brings the app forward (the service worker passes along which view to open).
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
@@ -3881,7 +4020,7 @@ function bindUI() {
   });
 
   // persistence lifecycle hooks
-  document.addEventListener('visibilitychange', () => { if (document.hidden) Local.flush(); else { DirectSync.wake(); checkReminders(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) Local.flush(); else { DirectSync.wake(); checkReminders(); Push.sync(); } });
   window.addEventListener('focus', () => checkReminders()); // back in the app: anything that couldn't notify shows now
   window.addEventListener('pagehide', () => Local.flush());
   window.addEventListener('online', () => { DirectSync.wake(); DirectSync.refresh(); });
@@ -3889,6 +4028,16 @@ function bindUI() {
   window.addEventListener('offline', () => DirectSync.refresh());
 }
 
+function pushSettingsHTML() {
+  if (!Push.available()) return '';
+  const p = meta.push || {}, on = Push.on(), n = Object.keys(p.slots || {}).length;
+  const status = !on ? 'Reminders and the daily summary arrive on time even when NotePannuda is closed, through the NotePannuda push server. Each notification is sealed on this device first, so the server sees only when it\u2019s due, never what it says.'
+    : p.error ? `<span class="warn-text">Couldn\u2019t update the push server (${esc(p.error)}). Notifications still work while NotePannuda is open.</span>`
+    : p.status === 'ok' ? `On: ${plural(n, 'notification', 'notifications')} scheduled for this device${p.syncedAt ? `, updated ${new Date(p.syncedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}` : ''}.`
+    : 'Connecting to the push server\u2026';
+  return `<div id="pushRow"><label class="check-row"><input type="checkbox" id="nPush" ${on ? 'checked' : ''}> On time, even when NotePannuda is closed</label>
+    <p class="faint">${status}${on ? ' This device schedules its own notifications: a reminder set on another device reaches this one once they\u2019ve synced.' : ''}</p></div>`;
+}
 async function renderNotifySettings() {
   const el = $('#notifyCard'); if (!el) return;
   const pr = Notify.prefs();
@@ -3899,7 +4048,8 @@ async function renderNotifySettings() {
   const bg = await registerDueCheck();
   el.innerHTML = `<label class="check-row"><input type="checkbox" id="nConnect" ${pr.connect ? 'checked' : ''}> When another device connects (while NotePannuda is in the background)</label>
     <label class="check-row"><input type="checkbox" id="nDue" ${pr.due ? 'checked' : ''}> Tasks due today, at <input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in"></label>
-    <p class="faint">Task reminders you set on a task always notify. ${bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed. Chrome picks when that runs, so if it\u2019s more than 3 hours after your time, the summary waits until you open the app instead.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
+    ${pushSettingsHTML()}
+    <p class="faint">Task reminders you set on a task always notify. ${bg === 'push' ? '' : bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed. Chrome picks when that runs, so if it\u2019s more than 3 hours after your time, the summary waits until you open the app instead.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
     <div class="actions"><button class="mini" data-notify="test">Send a test notification</button></div>`;
 }
 async function resetDevice() {
@@ -4028,6 +4178,8 @@ async function init() {
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
   setInterval(checkReminders, 20000); checkReminders();
+  setInterval(() => Push.sync(), 3600e3); Push.sync(); // hourly: a new day's summary, and checking the server still has the schedule
+  window.addEventListener('online', () => Push.sync());
   setInterval(renderSync, 15000);
 }
 init();

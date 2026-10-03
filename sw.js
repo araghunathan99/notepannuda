@@ -1,7 +1,7 @@
 // NotePannuda service worker: lets the app open offline and load instantly from the home screen,
 // and receives files and text shared to NotePannuda from Android's share sheet.
 // Network first for the app itself (so updates arrive right away), cached copy when offline.
-const CACHE = 'notepannuda-v24';
+const CACHE = 'notepannuda-v25';
 const SHARE_CACHE = 'notepannuda-share';
 const ASSETS = ['./notepannuda.html', './manifest.webmanifest', './favicon.ico', './favicon.svg', './favicon-16.png', './favicon-32.png', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './logo-96.png', './badge-96.png', './shortcut-new.png', './shortcut-tasks.png'];
 
@@ -69,7 +69,7 @@ async function dueCheck() {
   const db = await idb();
   const meta = (await req(db, 'meta', 'readonly', os => os.get('meta'))) || {};
   const prefs = Object.assign({ due: true, dueTime: '09:00' }, meta.notify || {});
-  if (!prefs.due) return;
+  if (!prefs.due || (meta.push && meta.push.on)) return;                 // exact-time pushes send the summary instead
   const now = new Date(), [h, m] = prefs.dueTime.split(':').map(Number);
   const mins = now.getHours() * 60 + now.getMinutes();
   if (mins < h * 60 + m) return;
@@ -88,3 +88,26 @@ async function dueCheck() {
   }
   await req(db, 'meta', 'readwrite', os => os.put(td, 'dueNotified'));
 }
+
+// ---------- exact-time notifications from the push server ----------
+// Each message was sealed by this device for this browser (the browser opens it before it gets here) and says
+// what to show. Chrome requires every push to show a notification, so one always goes up.
+self.addEventListener('push', e => e.waitUntil(onPush(e)));
+async function onPush(e) {
+  let m = null; try { m = e.data && e.data.json(); } catch (x) { }
+  const base = { icon: 'icon-192.png', badge: 'badge-96.png' };
+  if (!m || typeof m.title !== 'string') return self.registration.showNotification('NotePannuda', { ...base, body: 'Open NotePannuda to see what\u2019s due.', tag: 'np-push' });
+  const sum = m.t === 'sum';
+  await self.registration.showNotification(m.title, { ...base, body: String(m.body || ''), tag: sum ? 'due-' + m.date : 'reminder-' + m.id, data: { url: sum ? './notepannuda.html?view=today' : './notepannuda.html' } });
+  if (sum) { try { const db = await idb(); await req(db, 'meta', 'readwrite', os => os.put(m.date, 'dueNotified')); } catch (x) { } } // so the app doesn't show it again
+}
+// The browser replaced this device's push address. Tell the server the new one (it drops the old schedule,
+// which was sealed for the old keys); the app seals and uploads the schedule again the next time it runs.
+self.addEventListener('pushsubscriptionchange', e => e.waitUntil((async () => {
+  const db = await idb(), meta = (await req(db, 'meta', 'readonly', os => os.get('meta'))) || {}, p = meta.push;
+  if (!p || !p.on || !p.id || !p.token || !p.server) return;
+  const opts = e.oldSubscription && e.oldSubscription.options;
+  const sub = e.newSubscription || (opts ? await self.registration.pushManager.subscribe(opts) : null);
+  if (!sub) return;
+  await fetch(`${p.server}/v1/d/${p.id}`, { method: 'PUT', headers: { Authorization: 'Bearer ' + p.token, 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+})().catch(() => { })));

@@ -1,0 +1,18 @@
+name = "notepannuda-push"
+main = "src/worker.js"
+compatibility_date = "2025-09-01"
+
+[[durable_objects.bindings]]
+name = "DEVICES"
+class_name = "PushDevice"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PushDevice"]
+
+[vars]
+# Public half of the VAPID key pair (the private half is a secret: wrangler secret put VAPID_PRIVATE_KEY).
+VAPID_PUBLIC_KEY = ""
+VAPID_SUBJECT = "https://github.com/araghunathan99/notepannuda"
+# Pages allowed to call this server from a browser (comma-separated). Empty allows any.
+ALLOWED_ORIGINS = "https://araghunathan99.github.io,http://localhost:8765"
