@@ -1,7 +1,7 @@
 // NotePannuda service worker: lets the app open offline and load instantly from the home screen,
 // and receives files and text shared to NotePannuda from Android's share sheet.
 // Network first for the app itself (so updates arrive right away), cached copy when offline.
-const CACHE = 'notepannuda-v23';
+const CACHE = 'notepannuda-v24';
 const SHARE_CACHE = 'notepannuda-share';
 const ASSETS = ['./notepannuda.html', './manifest.webmanifest', './favicon.ico', './favicon.svg', './favicon-16.png', './favicon-32.png', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './logo-96.png', './badge-96.png', './shortcut-new.png', './shortcut-tasks.png'];
 
@@ -71,7 +71,9 @@ async function dueCheck() {
   const prefs = Object.assign({ due: true, dueTime: '09:00' }, meta.notify || {});
   if (!prefs.due) return;
   const now = new Date(), [h, m] = prefs.dueTime.split(':').map(Number);
-  if (now.getHours() * 60 + now.getMinutes() < h * 60 + m) return;
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (mins < h * 60 + m) return;
+  if (mins > h * 60 + m + 180) return;   // too long after the chosen time: the app shows it when you next open it
   const td = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   if ((await req(db, 'meta', 'readonly', os => os.get('dueNotified'))) === td) return;
   const items = ((await req(db, 'shards', 'readonly', os => os.getAll())) || []).flatMap(s => s.items || []);

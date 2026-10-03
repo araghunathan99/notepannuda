@@ -838,7 +838,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-02.1';
+const APP_VERSION = '2026-10-02.2';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -2376,7 +2376,10 @@ const Notify = {
 const away = () => document.hidden || !document.hasFocus();
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
-// "Due today" summary, once a day at the chosen time (or the first time the app runs after it).
+// "Due today" summary, once a day at the chosen time (or the first time the app runs after it). A system
+// notification only goes up within DUE_LATE_MIN of that time: phones run web apps only when they choose,
+// and a morning summary at 9 at night is just noise. Later than that, it waits to show in the app.
+const DUE_LATE_MIN = 180;
 // The date it was last shown is kept where the service worker's background check can see it too.
 async function getDueNotified() {
   if (Local.kind === 'indexeddb') { try { return (await idbTx(Local.db, 'meta', 'readonly', os => os.get('dueNotified'))) || ''; } catch (e) { } }
@@ -2398,14 +2401,16 @@ let dueChecking = false;
 async function checkDue() {
   const pr = Notify.prefs(); if (!pr.due || dueChecking) return;
   const [h, m] = (pr.dueTime || '09:00').split(':').map(Number), now = new Date();
-  if (now.getHours() * 60 + now.getMinutes() < h * 60 + m) return;
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (mins < h * 60 + m) return;
+  const late = mins > h * 60 + m + DUE_LATE_MIN;
   dueChecking = true;
   try {
     const td = today();
     if (await getDueNotified() === td) return;
     const sum = dueSummary();
     if (!sum) { await setDueNotified(td); return; }
-    if (away()) { if (!await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when you're next in the app
+    if (away()) { if (late || !await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when you're next in the app
     else toast(sum.title, 'Show', () => { state.view = 'today'; scheduleRender(); });
     await setDueNotified(td);
   } finally { dueChecking = false; }
@@ -3894,7 +3899,7 @@ async function renderNotifySettings() {
   const bg = await registerDueCheck();
   el.innerHTML = `<label class="check-row"><input type="checkbox" id="nConnect" ${pr.connect ? 'checked' : ''}> When another device connects (while NotePannuda is in the background)</label>
     <label class="check-row"><input type="checkbox" id="nDue" ${pr.due ? 'checked' : ''}> Tasks due today, at <input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in"></label>
-    <p class="faint">Task reminders you set on a task always notify. ${bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
+    <p class="faint">Task reminders you set on a task always notify. ${bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed. Chrome picks when that runs, so if it\u2019s more than 3 hours after your time, the summary waits until you open the app instead.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
     <div class="actions"><button class="mini" data-notify="test">Send a test notification</button></div>`;
 }
 async function resetDevice() {
