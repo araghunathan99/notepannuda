@@ -1,7 +1,7 @@
 // NotePannuda service worker: lets the app open offline and load instantly from the home screen,
 // and receives files and text shared to NotePannuda from Android's share sheet.
 // Network first for the app itself (so updates arrive right away), cached copy when offline.
-const CACHE = 'notepannuda-v25';
+const CACHE = 'notepannuda-v26';
 const SHARE_CACHE = 'notepannuda-share';
 const ASSETS = ['./notepannuda.html', './manifest.webmanifest', './favicon.ico', './favicon.svg', './favicon-16.png', './favicon-32.png', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './logo-96.png', './badge-96.png', './shortcut-new.png', './shortcut-tasks.png'];
 
@@ -98,7 +98,7 @@ async function onPush(e) {
   const base = { icon: 'icon-192.png', badge: 'badge-96.png' };
   if (!m || typeof m.title !== 'string') return self.registration.showNotification('NotePannuda', { ...base, body: 'Open NotePannuda to see what\u2019s due.', tag: 'np-push' });
   const sum = m.t === 'sum';
-  await self.registration.showNotification(m.title, { ...base, body: String(m.body || ''), tag: sum ? 'due-' + m.date : 'reminder-' + m.id, data: { url: sum ? './notepannuda.html?view=today' : './notepannuda.html' } });
+  await self.registration.showNotification(m.title, { ...base, body: String(m.body || ''), tag: sum ? 'due-' + m.date : m.t === 'rem' ? 'reminder-' + m.id : 'np-' + m.t, data: { url: sum ? './notepannuda.html?view=today' : './notepannuda.html' } });
   if (sum) { try { const db = await idb(); await req(db, 'meta', 'readwrite', os => os.put(m.date, 'dueNotified')); } catch (x) { } } // so the app doesn't show it again
 }
 // The browser replaced this device's push address. Tell the server the new one (it drops the old schedule,

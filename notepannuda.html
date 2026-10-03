@@ -842,7 +842,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-02.5';
+const APP_VERSION = '2026-10-02.6';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -2511,6 +2511,8 @@ function pushPlan() {
       out.push({ slot: `sum:${day}:${DEVICE}`, at, ttl: DUE_LATE_MIN * 60, urgency: 'normal', msg: { t: 'sum', date: day, title: sum.title, body: sum.body } });
     }
   }
+  const t = meta.push && meta.push.test; // Test on-time delivery: goes out with the schedule until it's due
+  if (t && t.at > now) out.push({ slot: t.slot, at: t.at, ttl: 300, urgency: 'high', msg: { t: 'test', title: 'NotePannuda', body: 'On-time notifications work: this came through the push server.' } });
   return out.sort((a, b) => a.at - b.at).slice(0, 400);
 }
 const dueAt = day => { const [h, m] = (Notify.prefs().dueTime || '09:00').split(':').map(Number), d = new Date(day + 'T00:00:00'); d.setHours(h, m, 0, 0); return d.getTime(); };
@@ -2555,6 +2557,21 @@ const Push = {
     try { const sub = await Push.subscription(false); if (sub) await sub.unsubscribe(); } catch (e) { }
     Object.assign(p, { on: false, slots: {}, held: {}, status: '', endpoint: '', planHash: '', error: '' });
     await Local.setMeta(meta); registerDueCheck();
+  },
+  // A real test through the server, due in 10 seconds so there's time to close the app and watch it arrive.
+  // Resolves to what the push service answered ('201' is delivered to Google or Apple), or why it didn't go.
+  async test() {
+    const p = Push.st(), at = Date.now() + 10000;
+    p.test = { slot: `test:${Date.now().toString(36)}:${DEVICE}`, at }; p.planHash = '';
+    await Push.sync();
+    if (p.error) return { ok: false, why: p.error };
+    if (!p.slots || p.slots[p.test.slot] !== at) return { ok: false, why: 'the push server didn\u2019t take it' };
+    const slot = p.test.slot;
+    for (let i = 0; i < 12; i++) { // the server keeps a short log of what it sent
+      await new Promise(r => setTimeout(r, i ? 5000 : Math.max(0, at - Date.now()) + 3000));
+      try { const hit = ((await Push.api('', 'GET')).log || []).find(l => l.slot === slot); if (hit) return { ok: /^2\d\d$/.test(hit.result), why: hit.result }; } catch (e) { }
+    }
+    return { ok: false, why: 'no answer from the push server yet' };
   },
   // Make sure this device is registered, then upload its schedule if it changed (or the server lost it).
   async sync() {
@@ -3625,6 +3642,12 @@ function bindUI() {
       const r = await Notify.request();
       if (r === 'granted') { await Notify.show('Notifications are on', 'NotePannuda will tell you about due tasks and connected devices.', { tag: 'welcome' }); checkDue(); }
     }
+    if (b.dataset.notify === 'pushtest') {
+      b.disabled = true; b.textContent = 'Sending in 10 seconds\u2026';
+      toast('A test will arrive in about 10 seconds. Close or minimize NotePannuda to see it arrive while it\u2019s closed.');
+      const r = await Push.test();
+      toast(r.ok ? 'The push server sent the test. If no notification appeared, check this device\u2019s notification settings.' : `The test didn\u2019t go out: ${r.why}.`, '', null, 9000);
+    }
     if (b.dataset.notify === 'test') { const ok = await Notify.show('NotePannuda', 'Notifications are working.', { tag: 'test' }); if (!ok) toast('This browser didn\u2019t show the notification.'); }
     renderNotifySettings();
   });
@@ -4055,7 +4078,7 @@ async function renderNotifySettings() {
     <div class="time-row"><label for="nDueTime">Send it at</label><input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in" ${pr.due ? '' : 'disabled'}></div>
     ${pushSettingsHTML()}
     <p class="faint">Task reminders you set on a task always notify. ${bg === 'push' ? '' : bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed. Chrome picks when that runs, so if it\u2019s more than 3 hours after your time, the summary waits until you open the app instead.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
-    <div class="actions"><button class="mini" data-notify="test">Send a test notification</button></div>`;
+    <div class="actions"><button class="mini" data-notify="test">Send a test notification</button>${Push.on() ? '<button class="mini" data-notify="pushtest" title="Sends a test through the push server, about 10 seconds from now">Test on-time delivery</button>' : ''}</div>`;
 }
 async function resetDevice() {
   DirectSync.stop();                     // unpair first, so nothing reaches your other devices
