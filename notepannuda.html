@@ -842,7 +842,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-02.6';
+const APP_VERSION = '2026-10-02.7';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -1313,6 +1313,8 @@ const latest = (a, b) => (a || '') > (b || '') ? a : b;
 const stable = o => JSON.stringify(o, (k, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a, key) => (a[key] = v[key], a), {}) : v);
 const canon = it => stable({ f: SYNC_FIELDS.map(f => it[f] ?? null), v: it.v, tv: it.tv, c: it.conflicts });
 
+const SAMPLE_STAMP = '000000000000001.00000.sample';
+const untouchedSample = it => /^sample-\d+$/.test(it.id) && !it.stub && !!it.v && SYNC_FIELDS.every(f => it.v[f] === SAMPLE_STAMP);
 function mergeIncoming(list) {
   let changed = false; const shards = new Set(), texts = new Set(), ids = new Set();
   for (const r0 of list) {
@@ -1322,7 +1324,11 @@ function mergeIncoming(list) {
     ensureStamps(r);
     Object.values(r.v).forEach(st => Clock.see(st));
     const l = S.items.get(r.id);
-    const m = mergeRecord(l, r);
+    let m = mergeRecord(l, r);
+    // Erased here (only a marker is left: deleted forever, or cleared after RECENT_DAYS), or an untouched
+    // sample jot: a copy from another device can't bring the text back into Recently deleted. Only an edit
+    // made after the deletion brings a jot back, and then it comes back as a live jot.
+    if (l && m.deleted && !m.stub && (l.stub || untouchedSample(l))) m = stubOf(m);
     if (l && canon(l) === canon(m)) continue;
     if (l && l.text !== m.text) texts.add(l.id);
     if (l && !m.stub) delete l.stub;   // a stub that meets a full copy becomes a full record again
@@ -3587,7 +3593,7 @@ function seed() {
     const it = newItem(Object.assign({ id: `sample-${i + 1}`, type, text, createdAt: ts, updatedAt: ts }, f));
     // Stamped as older than anything real: if you've deleted or edited a sample jot on another device,
     // your change wins when this device syncs (instead of the fresh sample coming back to life).
-    it.v = Object.fromEntries(SYNC_FIELDS.map(k => [k, '000000000000001.00000.sample'])); it.tv = {}; primeShadow(it);
+    it.v = Object.fromEntries(SYNC_FIELDS.map(k => [k, SAMPLE_STAMP])); it.tv = {}; primeShadow(it);
     it.autoTags = computeAutoTags(it);
     S.items.set(it.id, it); indexItem(it); markDirty(it.shard);
   });
