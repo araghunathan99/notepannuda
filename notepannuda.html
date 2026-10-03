@@ -838,7 +838,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-01.1';
+const APP_VERSION = '2026-10-02.1';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -2371,6 +2371,9 @@ const Notify = {
     catch (e) { return false; }
   }
 };
+// Away: you wouldn't see a message inside the app, because it's hidden or minimized, or another app is in front
+// (on a Mac the window often stays visible behind other apps, so being hidden alone isn't enough).
+const away = () => document.hidden || !document.hasFocus();
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 // "Due today" summary, once a day at the chosen time (or the first time the app runs after it).
@@ -2402,7 +2405,7 @@ async function checkDue() {
     if (await getDueNotified() === td) return;
     const sum = dueSummary();
     if (!sum) { await setDueNotified(td); return; }
-    if (document.hidden) { if (!await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when the app is next open
+    if (away()) { if (!await Notify.show(sum.title, sum.body, { tag: 'due-' + td, url: './notepannuda.html?view=today' })) return; } // not allowed: show it when you're next in the app
     else toast(sum.title, 'Show', () => { state.view = 'today'; scheduleRender(); });
     await setDueNotified(td);
   } finally { dueChecking = false; }
@@ -2420,17 +2423,24 @@ async function registerDueCheck() {
   } catch (e) { return 'unsupported'; }
 }
 
-function checkReminders() {
-  const now = Date.now();
-  for (const it of S.items.values()) {
-    if (it.deleted || it.done || !it.remindAt || it.reminded) continue;
-    if (new Date(it.remindAt).getTime() <= now) {
-      it.reminded = true; touch(it, { silent: true });
+// A reminder is marked as given (on all your devices, since it syncs) only once you've actually been told:
+// a system notification, or a message in the app while you're looking at it. If neither could happen here,
+// it stays due, so another device or the next time you're in the app still tells you.
+let remChecking = false;
+async function checkReminders() {
+  if (remChecking) return; remChecking = true;
+  try {
+    const now = Date.now();
+    for (const it of [...S.items.values()]) {
+      if (it.deleted || it.done || !it.remindAt || it.reminded) continue;
+      if (new Date(it.remindAt).getTime() > now) continue;
       const title = firstLine(it.text) || 'Untitled task';
+      if (away() && !await Notify.show('Reminder', title, { tag: 'reminder-' + it.id })) continue;
+      if (it.reminded) continue; // another device got there first while the notification was going up
+      it.reminded = true; touch(it, { silent: true });
       toast('Reminder: ' + title, 'Open', () => select(it.id));
-      if (document.hidden) Notify.show('Reminder', title, { tag: 'reminder-' + it.id });
     }
-  }
+  } finally { remChecking = false; }
   checkDue();
 }
 function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => { }); } catch (e) { } }
@@ -3866,7 +3876,8 @@ function bindUI() {
   });
 
   // persistence lifecycle hooks
-  document.addEventListener('visibilitychange', () => { if (document.hidden) Local.flush(); else { DirectSync.wake(); checkDue(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) Local.flush(); else { DirectSync.wake(); checkReminders(); } });
+  window.addEventListener('focus', () => checkReminders()); // back in the app: anything that couldn't notify shows now
   window.addEventListener('pagehide', () => Local.flush());
   window.addEventListener('online', () => { DirectSync.wake(); DirectSync.refresh(); });
   window.addEventListener('hashchange', handleLaunchParams); // a pairing link opened while the app is already running
