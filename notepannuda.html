@@ -839,7 +839,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-02.3';
+const APP_VERSION = '2026-10-02.4';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -2465,8 +2465,8 @@ function askNotify() { try { if ('Notification' in window && Notification.permis
 // Slot names carry the target device ("rem:<jot>:<device>"), so devices can later schedule for each other
 // too (see push-server/README.md). For now each one writes only its own.
 // No server or key set: the option is hidden and the local notifications do everything.
-const PUSH_SERVER = '';
-const PUSH_VAPID_KEY = '';
+const PUSH_SERVER = 'https://notepannuda-push.notepannuda-push.workers.dev';
+const PUSH_VAPID_KEY = 'BO9EAtqm21viLX1U7X3cYrPIu9EAy-4YSOODROddh9STm0UCBm-Q6kPMSZ84rpepD3ozDj4meHubWCazWuuEN7Q';
 const PUSH_SUM_DAYS = 7;   // daily summaries scheduled this many days ahead (refreshed at least once a day)
 const PUSH_REM_DAYS = 60;  // reminders this far ahead (the server takes up to 62 days)
 async function hkdfBytes(salt, ikm, info, len) {
