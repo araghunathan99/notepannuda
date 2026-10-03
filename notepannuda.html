@@ -266,7 +266,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 .peer-list li .mini{margin-left:auto}
 .warn-text{color:var(--med);font-size:13px;margin:6px 0 0}
 .check-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink);margin:4px 0 10px;cursor:pointer}
-.check-row input{margin-top:2px;width:18px;height:18px;flex:none}
+.check-row input[type=checkbox]{margin-top:2px;width:18px;height:18px;flex:none}
 .grip{position:absolute;top:0;bottom:0;width:10px;margin-left:-5px;cursor:col-resize;z-index:6;touch-action:none;outline:none}
 .grip::after{content:'';position:absolute;top:0;bottom:0;left:4px;width:2px;background:transparent;transition:background .15s}
 .grip:hover::after,.grip:focus-visible::after,body.resizing .grip::after{background:var(--accent)}
@@ -311,7 +311,10 @@ body.dropping::after{content:'Drop to import';position:fixed;inset:12px;border:2
 .brand{display:flex;align-items:center;gap:10px}
 .brand-badge{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 0 0 1px var(--rule);overflow:hidden}
 .brand-badge img{width:38px;height:38px;object-fit:contain;display:block}
-.time-in{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:2px 6px;font-size:13px;margin-left:4px}
+.time-row{display:flex;align-items:center;gap:10px;margin:-4px 0 12px 28px;font-size:13px;color:var(--graphite)}
+.time-in{border:1px solid var(--rule-strong);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:15px;min-width:130px;min-height:36px;cursor:pointer}
+.time-in:disabled{opacity:.5;cursor:default}
+@media (pointer: coarse){.time-in{min-height:44px;min-width:140px;font-size:16px}}
 .stats .mini{padding:2px 9px;font-size:12px;line-height:1.4}
 .cap-handle,.fab{display:none}
 .mini.danger{color:var(--high);border-color:var(--high)}
@@ -839,7 +842,7 @@ const stubV = it => { const v = { deleted: (it.v && it.v.deleted) || '' }; if (i
 const stubOf = it => ({ id: it.id, stub: true, deleted: true, type: it.type || 'note', text: '', tags: [], mutedAuto: [], createdAt: it.createdAt, updatedAt: it.updatedAt, shard: it.shard, v: stubV(it), tv: {}, conflicts: {} });
 const wire = it => it.deleted ? { id: it.id, stub: true, deleted: true, shard: it.shard, updatedAt: it.updatedAt, v: stubV(it) } : ser(it);
 const RECENT_DAYS = 30;               // Recently deleted keeps a jot's text this long
-const APP_VERSION = '2026-10-02.4';
+const APP_VERSION = '2026-10-02.5';
 
 function retagAll() {
   S.rules = compileRules(meta.rulesText);
@@ -3616,6 +3619,7 @@ function bindUI() {
   ['capNote', 'capTaskBtn', 'capList'].forEach(id => $('#' + id).addEventListener('pointerdown', e => e.preventDefault()));
   $('#capList').addEventListener('click', toggleChecklistLine);
   $('#notifyCard').addEventListener('click', async e => {
+    if (e.target.id === 'nDueTime') { try { e.target.showPicker(); } catch (err) { } return; }
     const b = e.target.closest('[data-notify]'); if (!b) return;
     if (b.dataset.notify === 'enable') {
       const r = await Notify.request();
@@ -3627,7 +3631,7 @@ function bindUI() {
   $('#notifyCard').addEventListener('change', async e => {
     const pr = Notify.prefs();
     if (e.target.id === 'nConnect') pr.connect = e.target.checked;
-    if (e.target.id === 'nDue') pr.due = e.target.checked;
+    if (e.target.id === 'nDue') { pr.due = e.target.checked; $('#nDueTime').disabled = !pr.due; }
     if (e.target.id === 'nDueTime' && /^\d{2}:\d{2}$/.test(e.target.value)) { pr.dueTime = e.target.value; await setDueNotified(''); }
     if (e.target.id === 'nPush') { e.target.disabled = true; await (e.target.checked ? Push.enable() : Push.disable()); renderNotifySettings(); return; }
     meta.notify = pr; await Local.setMeta(meta); // saved now, so the background check sees it
@@ -4047,7 +4051,8 @@ async function renderNotifySettings() {
   if (perm === 'denied') { el.innerHTML = '<p class="warn-text">Notifications are blocked for NotePannuda. Allow them in your browser\u2019s site settings (in Chrome: the icon left of the address, then Notifications), then come back here.</p>'; return; }
   const bg = await registerDueCheck();
   el.innerHTML = `<label class="check-row"><input type="checkbox" id="nConnect" ${pr.connect ? 'checked' : ''}> When another device connects (while NotePannuda is in the background)</label>
-    <label class="check-row"><input type="checkbox" id="nDue" ${pr.due ? 'checked' : ''}> Tasks due today, at <input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in"></label>
+    <label class="check-row"><input type="checkbox" id="nDue" ${pr.due ? 'checked' : ''}> A daily summary of tasks due today</label>
+    <div class="time-row"><label for="nDueTime">Send it at</label><input type="time" id="nDueTime" value="${esc(pr.dueTime)}" class="time-in" ${pr.due ? '' : 'disabled'}></div>
     ${pushSettingsHTML()}
     <p class="faint">Task reminders you set on a task always notify. ${bg === 'push' ? '' : bg === 'on' ? 'Background check is on: Chrome may also post the due summary while the app is closed. Chrome picks when that runs, so if it\u2019s more than 3 hours after your time, the summary waits until you open the app instead.' : bg === 'not allowed' ? 'Install NotePannuda as an app to let Chrome check for due tasks in the background.' : ''}</p>
     <div class="actions"><button class="mini" data-notify="test">Send a test notification</button></div>`;
